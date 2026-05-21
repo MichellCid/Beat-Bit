@@ -1,0 +1,89 @@
+.barraLateral {
+        height: 100%;
+        width: 250px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: #305d98; 
+        padding-top: 20px;
+        overflow-x: hidden;
+}
+
+.barraLateral a {
+    padding: 10px 20px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #ddd;
+    display: block;
+    transition: 0.3s;
+}
+
+.barraLateral a:hover {
+    background-color: #6394da;
+    color: #fff;
+}
+
+.dashboard {
+    margin-left: 250px;
+    padding: 20px;
+}
+
+@media screen and (max-width: 600px) {
+    .barraLateral {
+        width: 180px;
+    }
+    .dashboard {
+        margin-left: 180px;
+    }
+}
+
+
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.tabla th, #tablaTopMundial td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.tabla th {
+    background-color: #6695d1;
+    color: white;
+}
+
+.tabla tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #4a79b6;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    z-index: 1000;
+}
+
+.topbar h1 {
+    font-size: 20px;
+}
+
+.dashboard {
+    margin-left: 250px;
+    margin-top: 60px;
+    padding: 20px;
+}
+
+.barraLateral {
+    margin-top: 60px;
+    
+}

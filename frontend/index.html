@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beat & bit</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="topbar">
+        <h1>Beat & bit</h1>
+    </header>
+
+    <div class="barraLateral">
+        <a href="#" onclick="mostrarSeccion('inicio')">Inicio</a>
+        <a href="#" onclick="mostrarSeccion('paises')">Paises</a>
+        <a href="#" onclick="mostrarSeccion('artistas')">Artistas</a>
+    </div>
+
+
+    <div class="metricasPaises">
+
+    </div>
+    <main class="dashboard">
+
+        
+
+        <div id="inicio">
+
+            <p>Bienvenido a Beat & bit, tu fuente de información sobre las tendencias musicales en Spotify. Aquí encontrarás los datos más recientes sobre las canciones y artistas más populares a nivel mundial y por país. Explora nuestras métricas para descubrir qué está sonando en el mundo de la música.</p>
+
+            <h2>Tops mundiales</h2>
+
+            <section class="card">
+                <h3>Artista más escuchado</h3>
+                <img id="imagenArtistaNum1" src="" alt="Imagen del artista" width="180">
+                <p id="artistaNum1">Cargando...</p>
+            </section>
+            <section class="card">
+                <h3>Cancion más reproducida</h3>
+                
+
+                <table class="tabla" id="tablaTopMundial">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Canción</th>
+                            <th>Artista</th>
+                            <th>Reproducciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    
+                    </tbody>
+                </table>
+            </section>
+
+        </div>
+        
+
+        <div id="paises" style="display: none;">
+            <section class="card">
+                <h2>Analisis por pais</h2>
+
+                <p>Cancion mas escuchada por pais</p>
+                <table class="tabla" id="tablaTopPaises">
+                    <thead>
+                        <tr>
+                            <th>País</th>
+                            <th>Canción</th>
+                            <th>Artista</th>
+                            <th>Reproducciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <div id="artistas" style="display: none;">
+            <section class="card">
+                <h2>Analisis por artistas</h2>
+                <table class="tabla" id="tablaTopArtistas">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Artista</th>
+                            <th>Reproducciones/seguidores</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    
+                    </tbody>
+                </table>
+            </section>
+        
+    </main>
+
+    <footer>
+        <p>© 2026 Ingenieria de datos</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

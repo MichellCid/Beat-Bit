@@ -1,0 +1,73 @@
+services:
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    container_name: music_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      #- kafka
+
+  #ingestion:
+   # build: ./ingestion
+#    container_name: music_ingestion
+ #   env_file:
+  #    - .env
+   # depends_on:
+    #  - kafka
+     # - postgres
+
+  #processing:
+   # build: ./processing
+    #container_name: music_processing
+    #env_file:
+     # - .env
+    #depends_on:
+     # - kafka
+      #- postgres
+
+  postgres:
+    image: postgres:16
+    container_name: music_postgres
+    environment:
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: dw_musica
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  #zookeeper:
+   # image: confluentinc/cp-zookeeper:7.5.0
+    #container_name: zookeeper
+    #environment:
+     # ZOOKEEPER_CLIENT_PORT: 2181
+      #ZOOKEEPER_TICK_TIME: 2000
+
+  #kafka:
+   # image: confluentinc/cp-kafka:7.5.0
+    #container_name: kafka
+    #depends_on:
+     # - zookeeper
+    #ports:
+     # - "9092:9092"
+    #environment:
+     # KAFKA_BROKER_ID: 1
+      #KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      #KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      #KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+volumes:
+  postgres_data:  
