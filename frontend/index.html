@@ -62,6 +62,16 @@
             <section class="card">
                 <h2>Analisis por pais</h2>
 
+                <div class="filtro-pais">
+                    <label for="selectPais">Seleccionar país:</label>
+                    <select id="selectPais">
+                        <option value="">Todos los países</option>
+                    </select>
+                    <button id="btnLimpiarPais" type="button">X</button>
+                </div>
+
+                <p id="mensajePais" class="mensaje"></p>
+
                 <p>Cancion mas escuchada por pais</p>
                 <table class="tabla" id="tablaTopPaises">
                     <thead>
