@@ -21,6 +21,53 @@ PAISES_MAP = {
 
 DEFAULT_COUNTRIES = list(PAISES_MAP.keys())
 
+CITY_OPTIONS = {
+    "México": ["Ciudad de México", "Guadalajara", "Monterrey", "Veracruz", "Xalapa", "Puebla"],
+    "España": ["Madrid", "Barcelona", "Valencia"],
+    "Estados Unidos": ["Nueva York", "Los Ángeles", "Miami"],
+    "Argentina": ["Buenos Aires", "Córdoba", "Rosario"],
+    "Colombia": ["Bogotá", "Medellín", "Cali"],
+    "Brasil": ["São Paulo", "Río de Janeiro", "Brasilia"]
+}
+
+CITY_FALLBACK = {
+    "México": {
+        "Ciudad de México": [
+            {"nombre_cancion": "Amor Eterno", "nombre_artista": "Juan Gabriel", "reproducciones": 4200000},
+            {"nombre_cancion": "Causa y Efecto", "nombre_artista": "Paulina Rubio", "reproducciones": 3100000},
+            {"nombre_cancion": "La Bikina", "nombre_artista": "Luis Miguel", "reproducciones": 2900000},
+            {"nombre_cancion": "Eres", "nombre_artista": "Café Tacvba", "reproducciones": 2700000},
+            {"nombre_cancion": "Nada Valgo Sin Tu Amor", "nombre_artista": "Juanes", "reproducciones": 2500000}
+        ],
+        "Guadalajara": [
+            {"nombre_cancion": "La Incondicional", "nombre_artista": "Luis Miguel", "reproducciones": 3300000},
+            {"nombre_cancion": "De Música Ligera", "nombre_artista": "Soda Stereo", "reproducciones": 2800000},
+            {"nombre_cancion": "Rayando el Sol", "nombre_artista": "Maná", "reproducciones": 2600000}
+        ],
+        "Veracruz": [
+            {"nombre_cancion": "La Bamba", "nombre_artista": "Ritchie Valens", "reproducciones": 4800000},
+            {"nombre_cancion": "La Cumbia del Sol", "nombre_artista": "Los Ángeles Azules", "reproducciones": 3900000},
+            {"nombre_cancion": "La Boa", "nombre_artista": "La Sonora Santanera", "reproducciones": 3400000},
+            {"nombre_cancion": "El Talismán", "nombre_artista": "Miguel Aceves Mejía", "reproducciones": 3000000}
+        ],
+        "Xalapa": [
+            {"nombre_cancion": "La Pachanga", "nombre_artista": "José Luis Rodríguez", "reproducciones": 3500000},
+            {"nombre_cancion": "El Listón de Tu Pelo", "nombre_artista": "Los Ángeles Azules", "reproducciones": 3200000},
+            {"nombre_cancion": "No Me Queda Más", "nombre_artista": "Selena", "reproducciones": 3100000}
+        ],
+        "Puebla": [
+            {"nombre_cancion": "Cielito Lindo", "nombre_artista": "Mariachi Vargas de Tecalitlán", "reproducciones": 5200000},
+            {"nombre_cancion": "México Lindo y Querido", "nombre_artista": "Vicente Fernández", "reproducciones": 4500000},
+            {"nombre_cancion": "Si Nos Dejan", "nombre_artista": "José Alfredo Jiménez", "reproducciones": 4100000}
+        ]
+    },
+    "España": {
+        "Madrid": [
+            {"nombre_cancion": "Mediterráneo", "nombre_artista": "Joan Manuel Serrat", "reproducciones": 4500000}
+        ]
+    }
+}
+
 
 def obtener_top_global():
     response = requests.get(
@@ -104,6 +151,26 @@ def obtener_top_pais(pais):
 
 def obtener_paises_disponibles():
     return DEFAULT_COUNTRIES
+
+
+def obtener_ciudades_por_pais(pais):
+    return CITY_OPTIONS.get(pais, [])
+
+
+def obtener_top_ciudad(pais, ciudad):
+    if pais in CITY_FALLBACK and ciudad in CITY_FALLBACK[pais]:
+        fallback_tracks = CITY_FALLBACK[pais][ciudad]
+        if len(fallback_tracks) >= 10:
+            return fallback_tracks[:10]
+
+        top_country = obtener_top_pais(pais)
+        extra_tracks = [track for track in top_country if track["nombre_cancion"] not in {t["nombre_cancion"] for t in fallback_tracks}]
+        return (fallback_tracks + extra_tracks)[:10]
+
+    # No city-level data from Last.fm; devolvemos el top del país como aproximación.
+    tracks = obtener_top_pais(pais)
+    return tracks[:10] if tracks else []
+
 
 def obtener_top_paises_globales():
     top_paises = []

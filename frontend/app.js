@@ -66,6 +66,7 @@ async function cargarPaisesDisponibles() {
 
         select.addEventListener("change", () => {
             cargarTopPaises(select.value);
+            cargarCiudadesDisponible(select.value);
         });
 
         const btnLimpiar = document.getElementById("btnLimpiarPais");
@@ -73,6 +74,7 @@ async function cargarPaisesDisponibles() {
             btnLimpiar.addEventListener("click", () => {
                 select.value = "";
                 cargarTopPaises();
+                ocultarCiudades();
             });
         }
     } catch (error) {
@@ -80,9 +82,95 @@ async function cargarPaisesDisponibles() {
     }
 }
 
+function mostrarMensajeCiudad(text) {
+    const mensaje = document.getElementById("mensajeCiudad");
+    if (mensaje) {
+        mensaje.textContent = text || "";
+    }
+}
+
+function ocultarCiudades() {
+    const section = document.getElementById("ciudadSection");
+    if (section) {
+        section.style.display = "none";
+    }
+    const tbody = document.querySelector("#tablaTopCiudad tbody");
+    if (tbody) tbody.innerHTML = "";
+    mostrarMensajeCiudad("");
+}
+
+async function cargarCiudadesDisponible(pais) {
+    if (!pais) {
+        ocultarCiudades();
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/ciudades?country=${encodeURIComponent(pais)}`);
+        const data = await response.json();
+
+        const section = document.getElementById("ciudadSection");
+        const select = document.getElementById("selectCiudad");
+        const dataList = document.getElementById("ciudadesDatalist");
+        const input = document.getElementById("inputCiudad");
+
+        if (!section || !select || !dataList || !input) return;
+
+        const cities = data.ciudades || [];
+        if (!cities.length) {
+            section.style.display = "none";
+            return;
+        }
+
+        section.style.display = "block";
+        select.innerHTML = `<option value="">Elige una ciudad</option>`;
+        dataList.innerHTML = "";
+
+        cities.forEach(ciudad => {
+            select.innerHTML += `<option value="${ciudad}">${ciudad}</option>`;
+            dataList.innerHTML += `<option value="${ciudad}"></option>`;
+        });
+
+        select.onchange = () => {
+            if (select.value) {
+                input.value = select.value;
+                cargarTopCiudad(document.getElementById("selectPais").value, select.value);
+            }
+        };
+
+        const btnLimpiarCiudad = document.getElementById("btnLimpiarCiudad");
+        if (btnLimpiarCiudad) {
+            btnLimpiarCiudad.onclick = () => {
+                select.value = "";
+                input.value = "";
+                ocultarCiudades();
+                cargarTopPaises(document.getElementById("selectPais").value);
+            };
+        }
+
+        const btnBuscarCiudad = document.getElementById("btnBuscarCiudad");
+        if (btnBuscarCiudad) {
+            btnBuscarCiudad.onclick = () => {
+                const selectedCiudad = select.value.trim();
+                const typedCiudad = input.value.trim();
+                const ciudad = typedCiudad || selectedCiudad;
+                if (ciudad) {
+                    const paisSeleccionado = document.getElementById("selectPais").value;
+                    cargarTopCiudad(paisSeleccionado, ciudad);
+                    select.value = ciudad;
+                    input.value = ciudad;
+                }
+            };
+        }
+    } catch (error) {
+        console.error("Error cargando ciudades:", error);
+    }
+}
+
 async function cargarTopPaises(pais = "") {
     try {
         mostrarMensajePais("");
+        mostrarMensajeCiudad("");
         const url = pais
             ? `${API_URL}/top-paises?country=${encodeURIComponent(pais)}`
             : `${API_URL}/top-paises`;
@@ -113,6 +201,41 @@ async function cargarTopPaises(pais = "") {
     } catch (error) {
         console.error("Error cargando top por países:", error);
         mostrarMensajePais("Ocurrió un error al cargar los datos del país.");
+    }
+}
+
+async function cargarTopCiudad(pais, ciudad) {
+    if (!pais || !ciudad) {
+        mostrarMensajeCiudad("Selecciona un país y una ciudad para ver el ranking local.");
+        return;
+    }
+
+    try {
+        mostrarMensajeCiudad("");
+        const response = await fetch(`${API_URL}/top-ciudad?country=${encodeURIComponent(pais)}&city=${encodeURIComponent(ciudad)}`);
+        const data = await response.json();
+
+        const tbody = document.querySelector("#tablaTopCiudad tbody");
+        tbody.innerHTML = "";
+
+        if (!data.top_ciudad || data.top_ciudad.length === 0) {
+            mostrarMensajeCiudad("No hay rankings disponibles para esta ciudad");
+            return;
+        }
+
+        data.top_ciudad.slice(0, 10).forEach((track, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${track.nombre_cancion}</td>
+                    <td>${track.nombre_artista}</td>
+                    <td>${Number(track.reproducciones).toLocaleString()}</td>
+                </tr>
+            `;
+        });
+    } catch (error) {
+        console.error("Error cargando top por ciudad:", error);
+        mostrarMensajeCiudad("No hay rankings disponibles para esta ciudad");
     }
 }
 

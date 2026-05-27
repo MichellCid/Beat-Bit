@@ -70,7 +70,22 @@
                     <button id="btnLimpiarPais" type="button">X</button>
                 </div>
 
+                <div class="filtro-ciudad" id="ciudadSection" style="display:none; margin-top: 1rem;">
+                    <label for="selectCiudad">Seleccionar ciudad:</label>
+                    <select id="selectCiudad">
+                        <option value="">Elige una ciudad</option>
+                    </select>
+                    <button id="btnLimpiarCiudad" type="button">X</button>
+                    <div style="margin-top:0.5rem;">
+                        <label for="inputCiudad">O escribe una ciudad:</label>
+                        <input id="inputCiudad" list="ciudadesDatalist" placeholder="Buscar ciudad manualmente">
+                        <datalist id="ciudadesDatalist"></datalist>
+                        <button id="btnBuscarCiudad" type="button">Buscar</button>
+                    </div>
+                </div>
+
                 <p id="mensajePais" class="mensaje"></p>
+                <p id="mensajeCiudad" class="mensaje"></p>
 
                 <p>Cancion mas escuchada por pais</p>
                 <table class="tabla" id="tablaTopPaises">
@@ -84,6 +99,21 @@
                     </thead>
                     <tbody>
                     
+                    </tbody>
+                </table>
+            </section>
+            <section class="card" style="margin-top: 1rem;">
+                <h3>Top 10 local por ciudad</h3>
+                <table class="tabla" id="tablaTopCiudad">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Canción</th>
+                            <th>Artista</th>
+                            <th>Reproducciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     </tbody>
                 </table>
             </section>
