@@ -4,43 +4,90 @@ function mostrarSeccion(id) {
     document.querySelectorAll("#inicio, #paises, #artistas").forEach(sec => {
         sec.style.display = "none";
     });
-
     document.getElementById(id).style.display = "block";
 }
 
 async function cargarTopGlobal() {
+    const errorMsg = document.getElementById("errorMensajeGlobal");
+    if(errorMsg) {
+        errorMsg.style.display = "none";
+        errorMsg.textContent = "";
+    }
+
     try {
         const response = await fetch(`${API_URL}/top-global`);
+        if (!response.ok) throw new Error("Falla en el servidor");
         const data = await response.json();
-
-        document.getElementById("artistaNum1").textContent =
-            data.artista_top.nombre;
-
-        const imagen = document.getElementById("imagenArtistaNum1");
-
-        if (imagen) {
-            imagen.src = data.artista_top.imagen;
-            imagen.alt = data.artista_top.nombre;
-        }
-
-        const tbody = document.querySelector("#tablaTopMundial tbody");
-        tbody.innerHTML = "";
-
-        data.top_global
-            .sort((a, b) => Number(b.reproducciones) - Number(a.reproducciones))
-            .forEach((track, index) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${track.nombre_cancion}</td>
-                        <td>${track.nombre_artista}</td>
-                        <td>${Number(track.reproducciones).toLocaleString()}</td>
-                    </tr>
-                `;
-            });
+        
+        localStorage.setItem("cache_top_global", JSON.stringify(data));
+        renderizarDashboardGlobal(data);
 
     } catch (error) {
         console.error("Error cargando top global:", error);
+        if(errorMsg) {
+            errorMsg.style.display = "block";
+            errorMsg.textContent = "Error al cargar las métricas. Mostrando la última versión disponible.";
+        }
+        
+        const cacheData = localStorage.getItem("cache_top_global");
+        if (cacheData) {
+            renderizarDashboardGlobal(JSON.parse(cacheData));
+        }
+    }
+}
+
+function renderizarDashboardGlobal(data) {
+    const pistas = data.top_global.sort((a, b) => Number(b.reproducciones) - Number(a.reproducciones));
+    
+    if (data.artista_top) {
+        document.getElementById("artistaNum1").textContent = data.artista_top.nombre;
+        const imagen = document.getElementById("imagenArtistaNum1");
+        
+        if (imagen) {
+            if (data.artista_top.imagen) {
+                imagen.src = data.artista_top.imagen;
+            } else {
+                imagen.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.artista_top.nombre)}&background=3498db&color=fff&size=120`;
+            }
+            imagen.alt = data.artista_top.nombre;
+        }
+    }
+
+    if (pistas.length > 0) {
+        const topTrack = pistas[0];
+        document.getElementById("cancionNum1").textContent = topTrack.nombre_cancion;
+        document.getElementById("artistaCancionNum1").textContent = topTrack.nombre_artista;
+        document.getElementById("albumNum1").textContent = `${topTrack.nombre_cancion} - Single`; 
+    }
+
+    const leaderboard = document.getElementById("leaderboardTopMundial");
+    if(leaderboard) {
+        leaderboard.innerHTML = "";
+        pistas.slice(0, 10).forEach((track, index) => {
+            const rank = index + 1;
+            const rankStr = rank < 10 ? `0${rank}` : rank;
+            const rankClass = rank <= 3 ? `top-${rank}` : '';
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(track.nombre_artista)}&background=1a1a1a&color=fff&size=60`;
+
+            leaderboard.innerHTML += `
+                <div class="leaderboard-row ${rankClass}">
+                    <div class="leaderboard-left">
+                        <div class="rank-number">${rankStr}</div>
+                        <img src="${avatarUrl}" class="leaderboard-avatar" alt="Avatar de ${track.nombre_artista}">
+                        <div class="leaderboard-info">
+                            <div class="leaderboard-title">${track.nombre_cancion.toUpperCase()}</div>
+                            <div class="leaderboard-artist">👤 ${track.nombre_artista}</div>
+                        </div>
+                    </div>
+                    <div class="leaderboard-right">
+                        <div class="leaderboard-score-box">
+                            <span class="score-label">REPRODUCCIONES</span>
+                            <span class="score-value">${Number(track.reproducciones).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
     }
 }
 
