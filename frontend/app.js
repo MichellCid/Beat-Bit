@@ -293,3 +293,38 @@ window.onload = () => {
     cargarTopPaises();
     setInterval(cargarTopGlobal, 60000);
 };
+
+document.addEventListener("DOMContentLoaded", () => {
+    const btnSincronizar = document.getElementById("btnSincronizar");
+    
+    if(btnSincronizar) {
+        btnSincronizar.addEventListener("click", async () => {
+            btnSincronizar.disabled = true;
+            const textoOriginal = btnSincronizar.innerHTML;
+            btnSincronizar.innerHTML = "Sincronizando...";
+            btnSincronizar.style.opacity = "0.7";
+
+            try {
+                const response = await fetch(`${API_URL}/sincronizar`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    alert(result.mensaje); 
+                } else if (result.status === "warning") {
+                    alert(result.mensaje); 
+                } else {
+                    alert("Error en el servidor al intentar sincronizar.");
+                }
+            } catch (error) {
+                console.error("Error al sincronizar:", error);
+                alert("Error: Sincronización parcial");
+            } finally {
+                btnSincronizar.innerHTML = textoOriginal;
+                btnSincronizar.disabled = false;
+                btnSincronizar.style.opacity = "1";
+            }
+        });
+    }
+});
