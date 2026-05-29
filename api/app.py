@@ -4,10 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 from routes.dashboard import router as dashboard_router
 from servicios.sincronizacion import sincronizar_datos
+from servicios.transformaciones import estandarizar_metricas_popularidad
 
 def tarea_sincronizacion_automatica():
-    print("Ejecutando sincronización automática en segundo plano...")
     sincronizar_datos()
+    estandarizar_metricas_popularidad()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,5 +36,10 @@ def home():
 
 @app.post("/api/sincronizar")
 def endpoint_sincronizar():
-    resultado = sincronizar_datos()
-    return resultado
+    resultado_extraccion = sincronizar_datos()
+    resultado_transformacion = estandarizar_metricas_popularidad()
+    
+    return {
+        "extraccion": resultado_extraccion,
+        "transformacion": resultado_transformacion
+    }
