@@ -1,22 +1,13 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from apscheduler.schedulers.background import BackgroundScheduler
 from routes.dashboard import router as dashboard_router
 from servicios.sincronizacion import sincronizar_datos
-from servicios.transformaciones import estandarizar_metricas_popularidad
-
-def tarea_sincronizacion_automatica():
-    sincronizar_datos()
-    estandarizar_metricas_popularidad()
+from servicios.transformaciones import crear_esquema_data_warehouse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(tarea_sincronizacion_automatica, 'interval', minutes=1) 
-    scheduler.start()
     yield
-    scheduler.shutdown()
 
 app = FastAPI(title="Beat & Bit API", lifespan=lifespan)
 
@@ -37,8 +28,7 @@ def home():
 @app.post("/api/sincronizar")
 def endpoint_sincronizar():
     resultado_extraccion = sincronizar_datos()
-    resultado_transformacion = estandarizar_metricas_popularidad()
-    
+    resultado_transformacion = crear_esquema_data_warehouse()
     return {
         "extraccion": resultado_extraccion,
         "transformacion": resultado_transformacion
