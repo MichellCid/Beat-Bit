@@ -6,7 +6,7 @@ from servicios.servicios_lastfm import (
     obtener_ciudades_por_pais,
     obtener_top_ciudad,
     obtener_paises_disponibles,
-    obtener_artista_info  # <-- Importamos tu función
+    obtener_artista_info  
 )
 
 router = APIRouter()
@@ -17,7 +17,6 @@ def top_global():
     
     nombre_artista_top = top_global_data[0]["nombre_artista"] if top_global_data else "Sin datos disponibles"
     
-    # Llamamos a la API de Last.fm para conseguir la imagen del artista top
     imagen_artista_top = ""
     if nombre_artista_top != "Sin datos disponibles":
         try:
@@ -66,3 +65,27 @@ def top_ciudad(country: str, city: str):
         "city": city,
         "top_ciudad": obtener_top_ciudad(country, city)
     }
+
+@router.get("/historico")
+def obtener_historico(inicio: int = None, fin: int = None):
+    datos_completos = [
+        {"anio": 2015, "pop": 85, "rock": 70, "reggaeton": 30, "hip_hop": 60},
+        {"anio": 2016, "pop": 82, "rock": 68, "reggaeton": 40, "hip_hop": 65},
+        {"anio": 2017, "pop": 80, "rock": 65, "reggaeton": 60, "hip_hop": 70},
+        {"anio": 2018, "pop": 78, "rock": 60, "reggaeton": 75, "hip_hop": 75},
+        {"anio": 2019, "pop": 75, "rock": 58, "reggaeton": 85, "hip_hop": 80},
+        {"anio": 2020, "pop": 70, "rock": 55, "reggaeton": 90, "hip_hop": 82},
+        {"anio": 2021, "pop": 68, "rock": 50, "reggaeton": 95, "hip_hop": 85},
+        {"anio": 2022, "pop": 72, "rock": 48, "reggaeton": 92, "hip_hop": 88},
+        {"anio": 2023, "pop": 75, "rock": 45, "reggaeton": 88, "hip_hop": 90},
+        {"anio": 2024, "pop": 78, "rock": 42, "reggaeton": 85, "hip_hop": 95},
+        {"anio": 2025, "pop": 80, "rock": 40, "reggaeton": 82, "hip_hop": 92},
+        {"anio": 2026, "pop": 83, "rock": 38, "reggaeton": 80, "hip_hop": 90},
+    ]
+
+    if inicio and fin:
+        datos_filtrados = [d for d in datos_completos if inicio <= d["anio"] <= fin]
+    else:
+        datos_filtrados = datos_completos
+
+    return {"evolucion": datos_filtrados}

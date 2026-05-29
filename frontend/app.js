@@ -1,7 +1,8 @@
 const API_URL = "http://localhost:8000/api";
+let chartInstance = null;
 
 function mostrarSeccion(id) {
-    document.querySelectorAll("#inicio, #paises, #artistas").forEach(sec => {
+    document.querySelectorAll("#inicio, #paises, #artistas, #historico").forEach(sec => {
         sec.style.display = "none";
     });
     document.getElementById(id).style.display = "block";
@@ -23,7 +24,6 @@ async function cargarTopGlobal() {
         renderizarDashboardGlobal(data);
 
     } catch (error) {
-        console.error("Error cargando top global:", error);
         if(errorMsg) {
             errorMsg.style.display = "block";
             errorMsg.textContent = "Error al cargar las métricas. Mostrando la última versión disponible.";
@@ -125,7 +125,6 @@ async function cargarPaisesDisponibles() {
             });
         }
     } catch (error) {
-        console.error("Error cargando países:", error);
     }
 }
 
@@ -210,7 +209,6 @@ async function cargarCiudadesDisponible(pais) {
             };
         }
     } catch (error) {
-        console.error("Error cargando ciudades:", error);
     }
 }
 
@@ -246,7 +244,6 @@ async function cargarTopPaises(pais = "") {
             `;
         });
     } catch (error) {
-        console.error("Error cargando top por países:", error);
         mostrarMensajePais("Ocurrió un error al cargar los datos del país.");
     }
 }
@@ -281,9 +278,77 @@ async function cargarTopCiudad(pais, ciudad) {
             `;
         });
     } catch (error) {
-        console.error("Error cargando top por ciudad:", error);
         mostrarMensajeCiudad("No hay rankings disponibles para esta ciudad");
     }
+}
+
+async function cargarHistorico() {
+    const inputInicio = document.getElementById("anioInicio").value;
+    const inputFin = document.getElementById("anioFin").value;
+    const mensajeError = document.getElementById("mensajeHistorico");
+
+    mensajeError.style.display = "none";
+
+    let anioFin = inputFin ? parseInt(inputFin) : new Date().getFullYear();
+    let anioInicio = inputInicio ? parseInt(inputInicio) : anioFin - 5; 
+
+    try {
+        const response = await fetch(`${API_URL}/historico?inicio=${anioInicio}&fin=${anioFin}`);
+        const data = await response.json();
+
+        if (!data.evolucion || data.evolucion.length === 0) {
+            mensajeError.textContent = "Error: No hay datos para el periodo";
+            mensajeError.style.display = "block";
+            if (chartInstance) chartInstance.destroy();
+            return;
+        }
+
+        renderizarGraficaHistorico(data.evolucion);
+    } catch (error) {
+        mensajeError.textContent = "Error al conectar con el servidor.";
+        mensajeError.style.display = "block";
+    }
+}
+
+function renderizarGraficaHistorico(datos) {
+    const ctx = document.getElementById('graficaHistorico').getContext('2d');
+    
+    if (chartInstance) {
+        chartInstance.destroy(); 
+    }
+
+    const etiquetasAnios = datos.map(d => d.anio);
+    const generos = Object.keys(datos[0]).filter(key => key !== 'anio');
+    const colores = ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6'];
+
+    const datasets = generos.map((genero, index) => ({
+        label: genero.charAt(0).toUpperCase() + genero.slice(1),
+        data: datos.map(d => d[genero]),
+        borderColor: colores[index % colores.length],
+        backgroundColor: colores[index % colores.length],
+        fill: false,
+        tension: 0.3,
+        borderWidth: 2
+    }));
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: etiquetasAnios,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#ffffff' } }
+            },
+            scales: {
+                x: { ticks: { color: '#aaaaaa' }, grid: { color: '#333333' } },
+                y: { ticks: { color: '#aaaaaa' }, grid: { color: '#333333' } }
+            }
+        }
+    });
 }
 
 window.onload = () => {
@@ -296,6 +361,7 @@ window.onload = () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     const btnSincronizar = document.getElementById("btnSincronizar");
+    const btnGenerarGrafica = document.getElementById("btnGenerarGrafica");
     
     if(btnSincronizar) {
         btnSincronizar.addEventListener("click", async () => {
@@ -318,7 +384,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     alert("Error en el servidor al intentar sincronizar.");
                 }
             } catch (error) {
-                console.error("Error al sincronizar:", error);
                 alert("Error: Sincronización parcial");
             } finally {
                 btnSincronizar.innerHTML = textoOriginal;
@@ -326,5 +391,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnSincronizar.style.opacity = "1";
             }
         });
+    }
+
+    if (btnGenerarGrafica) {
+        btnGenerarGrafica.addEventListener("click", cargarHistorico);
     }
 });
