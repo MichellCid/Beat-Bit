@@ -1,5 +1,5 @@
-from servicios.servicios_spotify import busquedaArtista, obtenerTopCancionesArtista, obtenerAlbumPopular
-from fastapi import APIRouter
+from servicios.servicios_spotify import busquedaArtista, obtenerTopCancionesArtista, obtenerAlbumPopular, obtener_generos_por_region
+from fastapi import APIRouter, HTTPException
 from servicios.servicios_lastfm import (
     obtener_top_global,
     obtener_top_pais,
@@ -98,6 +98,15 @@ def obtener_historico(inicio: int = None, fin: int = None):
 
     return {"evolucion": datos_filtrados}
 
+@router.get("/popularidad-genero-region")
+def popularidad_genero_region(region: str, genero: str = None):
+    try:
+        generos = obtener_generos_por_region(region, genero)
+        return {"generos": generos}
+    except Exception as e:
+        print(f"Error procesando popularidad_genero_region: {e}")
+        raise HTTPException(status_code=500, detail="Error interno al procesar los datos de Spotify.")
+
 #-- ----------------------------------------------------------------------------------------------------------------------
 #Endpoints para obtener datos de los artistas desde Spotify
 
@@ -119,4 +128,3 @@ def buscarArtista(nombre: str):
         #"imagen": artista.get("images", [{}])[0].get("url", "")
         "artista": artista
     }
-
