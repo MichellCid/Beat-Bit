@@ -113,5 +113,4 @@ INSERT INTO dim_region (codigo, nombre) VALUES
 ('SR', 'Surinam'),
 ('TT', 'Trinidad y Tobago'),
 ('UY', 'Uruguay'),
-('VE', 'Venezuela')
-ON CONFLICT (codigo) DO NOTHING;
+('VE', 'Venezuela');

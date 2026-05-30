@@ -84,62 +84,128 @@
         </div>
 
         <div id="paises" style="display: none;">
-            <section class="card">
-                <h2>Análisis por país</h2>
-                <div class="filtro-pais">
-                    <label for="selectPais">Seleccionar país:</label>
-                    <select id="selectPais">
-                        <option value="">Todos los países</option>
-                    </select>
-                    <button id="btnLimpiarPais" type="button" class="btn-secondary">X</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">Análisis Demográfico</h2>
+                <button id="btnComparar" class="btn-primary">Comparar Ubicaciones</button>
+            </div>
+            <div id="comparacionContainer" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div id="panelA" style="flex: 1; min-width: 300px;">
+                    <section class="card">
+                        <h3>Ubicación A</h3>
+                        <div class="filtro-pais">
+                            <label for="selectPais">Seleccionar país:</label>
+                            <select id="selectPais">
+                                <option value="">Todos los países</option>
+                            </select>
+                            <button id="btnLimpiarPais" type="button" class="btn-secondary">X</button>
+                        </div>
+
+                        <div class="filtro-ciudad" id="ciudadSection" style="display:none; margin-top: 1rem;">
+                            <label for="selectCiudad">Seleccionar ciudad:</label>
+                            <select id="selectCiudad">
+                                <option value="">Elige una ciudad</option>
+                            </select>
+                            <button id="btnLimpiarCiudad" type="button" class="btn-secondary">X</button>
+                            <div style="margin-top:0.5rem;">
+                                <label for="inputCiudad">O escribe una ciudad:</label>
+                                <input id="inputCiudad" list="ciudadesDatalist" placeholder="Buscar ciudad manualmente">
+                                <datalist id="ciudadesDatalist"></datalist>
+                                <button id="btnBuscarCiudad" type="button" class="btn-primary">Buscar</button>
+                            </div>
+                        </div>
+
+                        <p id="mensajePais" class="mensaje"></p>
+                        <p id="mensajeCiudad" class="mensaje"></p>
+
+                        <h3 style="margin-top: 1rem;">Canción más escuchada por país</h3>
+                        <table class="tabla" id="tablaTopPaises">
+                            <thead>
+                                <tr>
+                                    <th>País</th>
+                                    <th>Canción</th>
+                                    <th>Artista</th>
+                                    <th>Reproducciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </section>
+                    <section class="card" style="margin-top: 1rem;">
+                        <h3>Top 10 local por ciudad</h3>
+                        <table class="tabla" id="tablaTopCiudad">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Canción</th>
+                                    <th>Artista</th>
+                                    <th>Reproducciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </section>
                 </div>
+                <div id="panelB" style="flex: 1; min-width: 300px; display: none;">
+                    <section class="card">
+                        <h3>Ubicación B</h3>
+                        <div class="filtro-pais">
+                            <label for="selectPaisB">Seleccionar país:</label>
+                            <select id="selectPaisB">
+                                <option value="">Todos los países</option>
+                            </select>
+                            <button id="btnLimpiarPaisB" type="button" class="btn-secondary">X</button>
+                        </div>
 
-                <div class="filtro-ciudad" id="ciudadSection" style="display:none; margin-top: 1rem;">
-                    <label for="selectCiudad">Seleccionar ciudad:</label>
-                    <select id="selectCiudad">
-                        <option value="">Elige una ciudad</option>
-                    </select>
-                    <button id="btnLimpiarCiudad" type="button" class="btn-secondary">X</button>
-                    <div style="margin-top:0.5rem;">
-                        <label for="inputCiudad">O escribe una ciudad:</label>
-                        <input id="inputCiudad" list="ciudadesDatalist" placeholder="Buscar ciudad manualmente">
-                        <datalist id="ciudadesDatalist"></datalist>
-                        <button id="btnBuscarCiudad" type="button" class="btn-primary">Buscar</button>
-                    </div>
+                        <div class="filtro-ciudad" id="ciudadSectionB" style="display:none; margin-top: 1rem;">
+                            <label for="selectCiudadB">Seleccionar ciudad:</label>
+                            <select id="selectCiudadB">
+                                <option value="">Elige una ciudad</option>
+                            </select>
+                            <button id="btnLimpiarCiudadB" type="button" class="btn-secondary">X</button>
+                            <div style="margin-top:0.5rem;">
+                                <label for="inputCiudadB">O escribe una ciudad:</label>
+                                <input id="inputCiudadB" list="ciudadesDatalistB" placeholder="Buscar ciudad manualmente">
+                                <datalist id="ciudadesDatalistB"></datalist>
+                                <button id="btnBuscarCiudadB" type="button" class="btn-primary">Buscar</button>
+                            </div>
+                        </div>
+
+                        <p id="mensajePaisB" class="mensaje"></p>
+                        <p id="mensajeCiudadB" class="mensaje"></p>
+
+                        <h3 style="margin-top: 1rem;">Canción más escuchada por país</h3>
+                        <table class="tabla" id="tablaTopPaisesB">
+                            <thead>
+                                <tr>
+                                    <th>País</th>
+                                    <th>Canción</th>
+                                    <th>Artista</th>
+                                    <th>Reproducciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </section>
+                    <section class="card" style="margin-top: 1rem;">
+                        <h3>Top 10 local por ciudad</h3>
+                        <table class="tabla" id="tablaTopCiudadB">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Canción</th>
+                                    <th>Artista</th>
+                                    <th>Reproducciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </section>
                 </div>
-
-                <p id="mensajePais" class="mensaje"></p>
-                <p id="mensajeCiudad" class="mensaje"></p>
-
-                <h3 style="margin-top: 1rem;">Canción más escuchada por país</h3>
-                <table class="tabla" id="tablaTopPaises">
-                    <thead>
-                        <tr>
-                            <th>País</th>
-                            <th>Canción</th>
-                            <th>Artista</th>
-                            <th>Reproducciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </section>
-            <section class="card" style="margin-top: 1rem;">
-                <h3>Top 10 local por ciudad</h3>
-                <table class="tabla" id="tablaTopCiudad">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Canción</th>
-                            <th>Artista</th>
-                            <th>Reproducciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </section>
+            </div>
         </div>
     
 

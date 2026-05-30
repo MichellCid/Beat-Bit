@@ -83,7 +83,7 @@ def procesar_evento(evento):
 
 def iniciar_consumidor():
     intentos = 0
-    while intentos < 10:
+    while intentos < 20:
         try:
             print(f"Intentando conectar a Kafka... (Intento {intentos + 1})")
             consumidor = KafkaConsumer(
@@ -100,7 +100,7 @@ def iniciar_consumidor():
         except Exception as e:
             print(f"Fallo temporal con Kafka: {e}")
             intentos += 1
-            time.sleep(5)
+            time.sleep(10)
 
 if __name__ == "__main__":
     print("Iniciando contenedor del consumidor. Esperando 5 segundos...")
