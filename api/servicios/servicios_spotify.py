@@ -419,15 +419,43 @@ def busquedaArtista(nombre):
     }
 
 
-def obtenerTopCancionesArtista(artist_id):
-    data = _spotify_get(
-        f"/artists/{artist_id}/top-tracks",
-        {"market": SPOTIFY_SEARCH_MARKET}
-    )
+# def obtenerTopCancionesArtista(artist_id):
+#     data = _spotify_get(
+#         f"/artists/{artist_id}/top-tracks",
+#         {"market": SPOTIFY_SEARCH_MARKET}
+#     )
+
+#     canciones = []
+
+#     for track in data.get("tracks", [])[:10]:
+#         imagen_album = ""
+
+#         if track.get("album", {}).get("images"):
+#             imagen_album = track["album"]["images"][0].get("url", "")
+
+#         canciones.append({
+#             "id": track.get("id"),
+#             "nombre": track.get("name"),
+#             "album": track.get("album", {}).get("name", "N/D"),
+#             "popularidad": track.get("popularity", 0),
+#             "imagen_album": imagen_album
+#         })
+
+#     return canciones
+
+def obtenerTopCancionesArtista(nombre_artista):
+
+    data = _spotify_get("/search", {
+        "q": f"artist:{nombre_artista}",
+        "type": "track",
+        "limit": 10,
+        "market": SPOTIFY_SEARCH_MARKET
+    })
 
     canciones = []
 
-    for track in data.get("tracks", [])[:10]:
+    for track in data.get("tracks", {}).get("items", []):
+
         imagen_album = ""
 
         if track.get("album", {}).get("images"):
@@ -441,7 +469,25 @@ def obtenerTopCancionesArtista(artist_id):
             "imagen_album": imagen_album
         })
 
+    canciones.sort(
+        key=lambda c: c.get("popularidad", 0),
+        reverse=True
+    )
+
     return canciones
+
+def obtenerCancionMasPopular(canciones):
+    if not canciones:
+        return {
+            "nombre": "No disponible",
+            "popularidad": 0,
+            "album": "No disponible",
+            "imagen_album": ""
+        }
+
+    return max(canciones, key=lambda c: c.get("popularidad", 0))
+
+
 
 
 def obtenerAlbumPopular(canciones):
@@ -451,7 +497,7 @@ def obtenerAlbumPopular(canciones):
             "imagen": ""
         }
 
-    cancion_top = max(canciones, key=lambda c: c.get("popularidad", 0))
+    cancion_top = obtenerCancionMasPopular(canciones)
 
     return {
         "nombre": cancion_top.get("album", "No disponible"),

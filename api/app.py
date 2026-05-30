@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.dashboard import router as dashboard_router
 from servicios.sincronizacion import sincronizar_datos, guardar_datos_artista, obtener_metricas_anteriores_por_nombre, obtener_datos_artista_hoy, obtener_artistas_guardados
-from servicios.servicios_spotify import busquedaArtista
+from servicios.servicios_spotify import busquedaArtista, obtenerTopCancionesArtista, obtenerAlbumPopular, obtenerCancionMasPopular
 from servicios.servicios_lastfm import obtener_artista_info
 from servicios.servicios_youtube import buscar_metricas_youtube
 from servicios.calculos import calcular_popularidad
@@ -100,13 +100,18 @@ def test_db():
 
 @app.get("/artista/{nombre}")
 def obtener_artista(nombre: str):
-    datos_cacheados = obtener_datos_artista_hoy(nombre)
-    if datos_cacheados:
-        return datos_cacheados
+    # datos_cacheados = obtener_datos_artista_hoy(nombre)
+    # if datos_cacheados:
+    #     return datos_cacheados
 
     spotify = busquedaArtista(nombre)
+    
     if not spotify:
         return {"error": "Artista no encontrado"}
+    
+    top_canciones = obtenerTopCancionesArtista(nombre)
+    cancion_mas_famosa = obtenerCancionMasPopular(top_canciones)
+    album_mas_famoso = obtenerAlbumPopular(top_canciones)
 
     try:
         lastfm = obtener_artista_info(nombre)
@@ -125,6 +130,9 @@ def obtener_artista(nombre: str):
 
     popularidad = calcular_popularidad(escuchas, reproducciones, vistas, likes)
 
+    #top_canciones = obtenerTopCancionesArtista(spotify.get("id"))
+    #album_popular = obtenerAlbumPopular(top_canciones)
+    
     artista_response = {
         "spotify_id": spotify.get("id"),
         "nombre": spotify.get("nombre"),
@@ -137,7 +145,8 @@ def obtener_artista(nombre: str):
         "reproducciones": reproducciones,
         "vistas": vistas,
         "likes": likes,
-        "popularidad": popularidad
+        "popularidad": popularidad,
+        
     }
 
     regiones_response = youtube.get("regiones", [])
@@ -148,6 +157,10 @@ def obtener_artista(nombre: str):
         "id_artista": id_artista,
         "artista": artista_response,
         "metricas": metricas_response,
+        "cancion_mas_famosa": cancion_mas_famosa,
+        #"top_canciones": top_canciones,
+        "album_mas_famoso": album_mas_famoso,
+        "top_10_canciones": top_canciones,
         "regiones": regiones_response
     }
 
