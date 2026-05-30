@@ -1,67 +1,55 @@
 const API_URL = "http://localhost:8000/api";
+
 let chartInstance = null;
 let idArtistaActual = null;
 let graficaArtista = null;
+let comparacionActiva = false;
 
 function mostrarSeccion(id) {
-    document.querySelectorAll("#inicio, #paises, #artistas, #historico").forEach(sec => {
+    document.querySelectorAll("#inicio, #paises, #artistas, #historico, #demografia").forEach(sec => {
         sec.style.display = "none";
     });
-    document.getElementById(id).style.display = "block";
+
+    const seccion = document.getElementById(id);
+    if (seccion) {
+        seccion.style.display = "block";
+    }
 }
+
+/* =========================================================
+   INICIO / TOP GLOBAL
+========================================================= */
 
 async function cargarTopGlobal() {
     const errorMsg = document.getElementById("errorMensajeGlobal");
-    if(errorMsg) {
+
+    if (errorMsg) {
         errorMsg.style.display = "none";
         errorMsg.textContent = "";
     }
 
     try {
         const response = await fetch(`${API_URL}/top-global`);
-        if (!response.ok) throw new Error("Falla en el servidor");
+
+        if (!response.ok) {
+            throw new Error("Falla en el servidor");
+        }
+
         const data = await response.json();
-        
+
         localStorage.setItem("cache_top_global", JSON.stringify(data));
         renderizarDashboardGlobal(data);
 
-        /** //document.getElementById("artistaNum1").textContent =
-          //  data.artista_top.nombre;
-
-        const imagen = document.getElementById("imagenArtistaNum1");
-
-        if (imagen) {
-            imagen.src = data.artista_top.imagen || "https://via.placeholder.com/180?text=Sin+Imagen";
-            imagen.alt = data.artista_top.nombre || "Sin Imagen";
-        }
-
-        const tbody = document.querySelector("#tablaTopMundial tbody");
-        
-        if(tbody) {
-            tbody.innerHTML = "";
-
-            data.top_global
-                .sort((a, b) => Number(b.reproducciones) - Number(a.reproducciones))
-                .forEach((track, index) => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${track.nombre_cancion}</td>
-                            <td>${track.nombre_artista}</td>
-                            <td>${Number(track.reproducciones).toLocaleString()}</td>
-                        </tr>
-                    `;
-                });
-        }**/
-
     } catch (error) {
         console.error("Error cargando top global:", error);
-        if(errorMsg) {
+
+        if (errorMsg) {
             errorMsg.style.display = "block";
             errorMsg.textContent = "Error al cargar las métricas. Mostrando la última versión disponible.";
         }
-        
+
         const cacheData = localStorage.getItem("cache_top_global");
+
         if (cacheData) {
             renderizarDashboardGlobal(JSON.parse(cacheData));
         }
@@ -69,118 +57,222 @@ async function cargarTopGlobal() {
 }
 
 function renderizarDashboardGlobal(data) {
-    const pistas = data.top_global.sort((a, b) => Number(b.reproducciones) - Number(a.reproducciones));
-    
+    const pistas = (data.top_global || []).sort((a, b) => {
+        return Number(b.reproducciones) - Number(a.reproducciones);
+    });
+
     if (data.artista_top) {
-        document.getElementById("artistaNum1").textContent = data.artista_top.nombre;
+        const artistaNum1 = document.getElementById("artistaNum1");
         const imagen = document.getElementById("imagenArtistaNum1");
-        
+
+        if (artistaNum1) {
+            artistaNum1.textContent = data.artista_top.nombre;
+        }
+
         if (imagen) {
             if (data.artista_top.imagen) {
                 imagen.src = data.artista_top.imagen;
             } else {
                 imagen.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.artista_top.nombre)}&background=3498db&color=fff&size=120`;
             }
+
             imagen.alt = data.artista_top.nombre;
         }
     }
 
     if (pistas.length > 0) {
         const topTrack = pistas[0];
-        document.getElementById("cancionNum1").textContent = topTrack.nombre_cancion;
-        document.getElementById("artistaCancionNum1").textContent = topTrack.nombre_artista;
-        document.getElementById("albumNum1").textContent = `${topTrack.nombre_cancion} - Single`; 
+
+        const cancionNum1 = document.getElementById("cancionNum1");
+        const artistaCancionNum1 = document.getElementById("artistaCancionNum1");
+        const albumNum1 = document.getElementById("albumNum1");
+
+        if (cancionNum1) {
+            cancionNum1.textContent = topTrack.nombre_cancion;
+        }
+
+        if (artistaCancionNum1) {
+            artistaCancionNum1.textContent = topTrack.nombre_artista;
+        }
+
+        if (albumNum1) {
+            albumNum1.textContent = `${topTrack.nombre_cancion} - Single`;
+        }
     }
 
     const leaderboard = document.getElementById("leaderboardTopMundial");
-    if(leaderboard) {
+
+    if (leaderboard) {
         leaderboard.innerHTML = "";
+
         pistas.slice(0, 10).forEach((track, index) => {
             const rank = index + 1;
             const rankStr = rank < 10 ? `0${rank}` : rank;
-            const rankClass = rank <= 3 ? `top-${rank}` : '';
+            const rankClass = rank <= 3 ? `top-${rank}` : "";
             const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(track.nombre_artista)}&background=1a1a1a&color=fff&size=60`;
 
-                    leaderboard.innerHTML += `
-                        <div class="leaderboard-row ${rankClass}">
-                            <div class="leaderboard-left">
-                                <div class="rank-number">${rankStr}</div>
-                                <img src="${avatarUrl}" class="leaderboard-avatar" alt="Avatar de ${track.nombre_artista}">
-                                <div class="leaderboard-info">
-                                    <div class="leaderboard-title">${track.nombre_cancion.toUpperCase()}</div>
-                                    <div class="leaderboard-artist">👤 ${track.nombre_artista}</div>
-                                </div>
-                            </div>
-                            <div class="leaderboard-right">
-                                <div class="leaderboard-score-box">
-                                    <span class="score-label">REPRODUCCIONES</span>
-                                    <span class="score-value">${Number(track.reproducciones).toLocaleString()}</span>
-                                </div>
-                            </div>
+            leaderboard.innerHTML += `
+                <div class="leaderboard-row ${rankClass}">
+                    <div class="leaderboard-left">
+                        <div class="rank-number">${rankStr}</div>
+                        <img src="${avatarUrl}" class="leaderboard-avatar" alt="Avatar de ${track.nombre_artista}">
+                        <div class="leaderboard-info">
+                            <div class="leaderboard-title">${track.nombre_cancion.toUpperCase()}</div>
+                            <div class="leaderboard-artist">👤 ${track.nombre_artista}</div>
                         </div>
-                    `;
+                    </div>
+                    <div class="leaderboard-right">
+                        <div class="leaderboard-score-box">
+                            <span class="score-label">REPRODUCCIONES</span>
+                            <span class="score-value">${Number(track.reproducciones).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         });
     }
 }
 
+/* =========================================================
+   MENSAJES
+========================================================= */
 
-function mostrarMensajePais(text) {
-    const mensaje = document.getElementById("mensajePais");
+function mostrarMensajePais(text, ubicacion = "A") {
+    const id = ubicacion === "B" ? "mensajePaisB" : "mensajePais";
+    const mensaje = document.getElementById(id);
+
     if (mensaje) {
         mensaje.textContent = text || "";
     }
 }
+
+function mostrarMensajeCiudad(text, ubicacion = "A") {
+    const id = ubicacion === "B" ? "mensajeCiudadB" : "mensajeCiudad";
+    const mensaje = document.getElementById(id);
+
+    if (mensaje) {
+        mensaje.textContent = text || "";
+    }
+}
+
+/* =========================================================
+   PAÍSES A Y B
+========================================================= */
 
 async function cargarPaisesDisponibles() {
     try {
         const response = await fetch(`${API_URL}/paises`);
+
+        if (!response.ok) {
+            throw new Error("Error al cargar países");
+        }
+
         const data = await response.json();
 
-        const select = document.getElementById("selectPais");
-        if (!select) return;
+        const selectA = document.getElementById("selectPais");
+        const selectB = document.getElementById("selectPaisB");
 
-        select.innerHTML = `<option value="">Todos los países</option>`;
-        data.paises.forEach(pais => {
-            select.innerHTML += `<option value="${pais}">${pais}</option>`;
-        });
+        if (!data.paises || data.paises.length === 0) {
+            console.warn("La API no devolvió países");
+            return;
+        }
 
-        select.addEventListener("change", () => {
-            cargarTopPaises(select.value);
-            cargarCiudadesDisponible(select.value);
-        });
+        function llenarSelect(select) {
+            if (!select) return;
 
-        const btnLimpiar = document.getElementById("btnLimpiarPais");
-        if (btnLimpiar) {
-            btnLimpiar.addEventListener("click", () => {
-                select.value = "";
-                cargarTopPaises();
-                ocultarCiudades();
+            select.innerHTML = `<option value="">Todos los países</option>`;
+
+            data.paises.forEach(pais => {
+                const option = document.createElement("option");
+                option.value = pais;
+                option.textContent = pais;
+                select.appendChild(option);
             });
         }
+
+        llenarSelect(selectA);
+        llenarSelect(selectB);
+
+        if (selectA) {
+            selectA.addEventListener("change", () => {
+                cargarTopPaises(selectA.value, "A");
+                cargarCiudadesDisponible(selectA.value, "A");
+            });
+        }
+
+        if (selectB) {
+            selectB.addEventListener("change", () => {
+                cargarTopPaises(selectB.value, "B");
+                cargarCiudadesDisponible(selectB.value, "B");
+            });
+        }
+
+        const btnLimpiarA = document.getElementById("btnLimpiarPais");
+        if (btnLimpiarA && selectA) {
+            btnLimpiarA.addEventListener("click", () => {
+                selectA.value = "";
+                cargarTopPaises("", "A");
+                ocultarCiudades("A");
+            });
+        }
+
+        const btnLimpiarB = document.getElementById("btnLimpiarPaisB");
+        if (btnLimpiarB && selectB) {
+            btnLimpiarB.addEventListener("click", () => {
+                selectB.value = "";
+                cargarTopPaises("", "B");
+                ocultarCiudades("B");
+            });
+        }
+
     } catch (error) {
+        console.error("Error cargando países:", error);
     }
 }
 
-function mostrarMensajeCiudad(text) {
-    const mensaje = document.getElementById("mensajeCiudad");
-    if (mensaje) {
-        mensaje.textContent = text || "";
-    }
-}
+/* =========================================================
+   CIUDADES A Y B
+========================================================= */
 
-function ocultarCiudades() {
-    const section = document.getElementById("ciudadSection");
+function ocultarCiudades(ubicacion = "A") {
+    const sectionId = ubicacion === "B" ? "ciudadSectionB" : "ciudadSection";
+    const selectId = ubicacion === "B" ? "selectCiudadB" : "selectCiudad";
+    const inputId = ubicacion === "B" ? "inputCiudadB" : "inputCiudad";
+    const dataListId = ubicacion === "B" ? "ciudadesDatalistB" : "ciudadesDatalist";
+    const tablaId = ubicacion === "B" ? "#tablaTopCiudadB tbody" : "#tablaTopCiudad tbody";
+
+    const section = document.getElementById(sectionId);
+    const select = document.getElementById(selectId);
+    const input = document.getElementById(inputId);
+    const dataList = document.getElementById(dataListId);
+    const tbody = document.querySelector(tablaId);
+
     if (section) {
         section.style.display = "none";
     }
-    const tbody = document.querySelector("#tablaTopCiudad tbody");
-    if (tbody) tbody.innerHTML = "";
-    mostrarMensajeCiudad("");
+
+    if (select) {
+        select.innerHTML = `<option value="">Elige una ciudad</option>`;
+    }
+
+    if (input) {
+        input.value = "";
+    }
+
+    if (dataList) {
+        dataList.innerHTML = "";
+    }
+
+    if (tbody) {
+        tbody.innerHTML = "";
+    }
+
+    mostrarMensajeCiudad("", ubicacion);
 }
 
-async function cargarCiudadesDisponible(pais) {
+async function cargarCiudadesDisponible(pais, ubicacion = "A") {
     if (!pais) {
-        ocultarCiudades();
+        ocultarCiudades(ubicacion);
         return;
     }
 
@@ -188,22 +280,37 @@ async function cargarCiudadesDisponible(pais) {
         const response = await fetch(`${API_URL}/ciudades?country=${encodeURIComponent(pais)}`);
         const data = await response.json();
 
-        const section = document.getElementById("ciudadSection");
-        const select = document.getElementById("selectCiudad");
-        const dataList = document.getElementById("ciudadesDatalist");
-        const input = document.getElementById("inputCiudad");
+        const sectionId = ubicacion === "B" ? "ciudadSectionB" : "ciudadSection";
+        const selectId = ubicacion === "B" ? "selectCiudadB" : "selectCiudad";
+        const inputId = ubicacion === "B" ? "inputCiudadB" : "inputCiudad";
+        const dataListId = ubicacion === "B" ? "ciudadesDatalistB" : "ciudadesDatalist";
+        const btnLimpiarId = ubicacion === "B" ? "btnLimpiarCiudadB" : "btnLimpiarCiudad";
+        const btnBuscarId = ubicacion === "B" ? "btnBuscarCiudadB" : "btnBuscarCiudad";
+        const selectPaisId = ubicacion === "B" ? "selectPaisB" : "selectPais";
 
-        if (!section || !select || !dataList || !input) return;
+        const section = document.getElementById(sectionId);
+        const select = document.getElementById(selectId);
+        const dataList = document.getElementById(dataListId);
+        const input = document.getElementById(inputId);
+
+        if (!section || !select || !dataList || !input) {
+            console.warn(`Faltan elementos HTML para ciudad en ubicación ${ubicacion}`);
+            return;
+        }
 
         const cities = data.ciudades || [];
+
         if (!cities.length) {
-            section.style.display = "none";
+            ocultarCiudades(ubicacion);
+            mostrarMensajeCiudad("No hay ciudades disponibles para este país.", ubicacion);
             return;
         }
 
         section.style.display = "block";
         select.innerHTML = `<option value="">Elige una ciudad</option>`;
         dataList.innerHTML = "";
+        input.value = "";
+        mostrarMensajeCiudad("", ubicacion);
 
         cities.forEach(ciudad => {
             select.innerHTML += `<option value="${ciudad}">${ciudad}</option>`;
@@ -213,42 +320,61 @@ async function cargarCiudadesDisponible(pais) {
         select.onchange = () => {
             if (select.value) {
                 input.value = select.value;
-                cargarTopCiudad(document.getElementById("selectPais").value, select.value);
+
+                const paisSeleccionado = document.getElementById(selectPaisId).value;
+                cargarTopCiudad(paisSeleccionado, select.value, ubicacion);
             }
         };
 
-        const btnLimpiarCiudad = document.getElementById("btnLimpiarCiudad");
+        const btnLimpiarCiudad = document.getElementById(btnLimpiarId);
         if (btnLimpiarCiudad) {
             btnLimpiarCiudad.onclick = () => {
                 select.value = "";
                 input.value = "";
-                ocultarCiudades();
-                cargarTopPaises(document.getElementById("selectPais").value);
+
+                const tbodyId = ubicacion === "B" ? "#tablaTopCiudadB tbody" : "#tablaTopCiudad tbody";
+                const tbody = document.querySelector(tbodyId);
+
+                if (tbody) {
+                    tbody.innerHTML = "";
+                }
+
+                mostrarMensajeCiudad("", ubicacion);
             };
         }
 
-        const btnBuscarCiudad = document.getElementById("btnBuscarCiudad");
+        const btnBuscarCiudad = document.getElementById(btnBuscarId);
         if (btnBuscarCiudad) {
             btnBuscarCiudad.onclick = () => {
                 const selectedCiudad = select.value.trim();
                 const typedCiudad = input.value.trim();
                 const ciudad = typedCiudad || selectedCiudad;
+
                 if (ciudad) {
-                    const paisSeleccionado = document.getElementById("selectPais").value;
-                    cargarTopCiudad(paisSeleccionado, ciudad);
+                    const paisSeleccionado = document.getElementById(selectPaisId).value;
+
+                    cargarTopCiudad(paisSeleccionado, ciudad, ubicacion);
                     select.value = ciudad;
                     input.value = ciudad;
                 }
             };
         }
+
     } catch (error) {
+        console.error(`Error cargando ciudades para ubicación ${ubicacion}:`, error);
+        mostrarMensajeCiudad("Ocurrió un error al cargar las ciudades.", ubicacion);
     }
 }
 
-async function cargarTopPaises(pais = "") {
+/* =========================================================
+   TOP POR PAÍS A Y B
+========================================================= */
+
+async function cargarTopPaises(pais = "", ubicacion = "A") {
     try {
-        mostrarMensajePais("");
-        mostrarMensajeCiudad("");
+        mostrarMensajePais("", ubicacion);
+        mostrarMensajeCiudad("", ubicacion);
+
         const url = pais
             ? `${API_URL}/top-paises?country=${encodeURIComponent(pais)}`
             : `${API_URL}/top-paises`;
@@ -256,12 +382,16 @@ async function cargarTopPaises(pais = "") {
         const response = await fetch(url);
         const data = await response.json();
 
-        const tbody = document.querySelector("#tablaTopPaises tbody");
+        const tablaId = ubicacion === "B" ? "#tablaTopPaisesB tbody" : "#tablaTopPaises tbody";
+        const tbody = document.querySelector(tablaId);
+
+        if (!tbody) return;
+
         tbody.innerHTML = "";
 
         if (!data.top_paises || data.top_paises.length === 0) {
             if (pais) {
-                mostrarMensajePais("Sin datos registrados para esta región");
+                mostrarMensajePais("Sin datos registrados para esta región.", ubicacion);
             }
             return;
         }
@@ -276,27 +406,38 @@ async function cargarTopPaises(pais = "") {
                 </tr>
             `;
         });
+
     } catch (error) {
-        mostrarMensajePais("Ocurrió un error al cargar los datos del país.");
+        console.error(`Error cargando top países ${ubicacion}:`, error);
+        mostrarMensajePais("Ocurrió un error al cargar los datos del país.", ubicacion);
     }
 }
 
-async function cargarTopCiudad(pais, ciudad) {
+/* =========================================================
+   TOP POR CIUDAD A Y B
+========================================================= */
+
+async function cargarTopCiudad(pais, ciudad, ubicacion = "A") {
     if (!pais || !ciudad) {
-        mostrarMensajeCiudad("Selecciona un país y una ciudad para ver el ranking local.");
+        mostrarMensajeCiudad("Selecciona un país y una ciudad para ver el ranking local.", ubicacion);
         return;
     }
 
     try {
-        mostrarMensajeCiudad("");
+        mostrarMensajeCiudad("", ubicacion);
+
         const response = await fetch(`${API_URL}/top-ciudad?country=${encodeURIComponent(pais)}&city=${encodeURIComponent(ciudad)}`);
         const data = await response.json();
 
-        const tbody = document.querySelector("#tablaTopCiudad tbody");
+        const tablaId = ubicacion === "B" ? "#tablaTopCiudadB tbody" : "#tablaTopCiudad tbody";
+        const tbody = document.querySelector(tablaId);
+
+        if (!tbody) return;
+
         tbody.innerHTML = "";
 
         if (!data.top_ciudad || data.top_ciudad.length === 0) {
-            mostrarMensajeCiudad("No hay rankings disponibles para esta ciudad");
+            mostrarMensajeCiudad("No hay rankings disponibles para esta ciudad.", ubicacion);
             return;
         }
 
@@ -310,49 +451,70 @@ async function cargarTopCiudad(pais, ciudad) {
                 </tr>
             `;
         });
+
     } catch (error) {
-        mostrarMensajeCiudad("No hay rankings disponibles para esta ciudad");
+        console.error(`Error cargando top ciudad ${ubicacion}:`, error);
+        mostrarMensajeCiudad("No hay rankings disponibles para esta ciudad.", ubicacion);
     }
 }
+
+/* =========================================================
+   HISTÓRICO
+========================================================= */
 
 async function cargarHistorico() {
     const inputInicio = document.getElementById("anioInicio").value;
     const inputFin = document.getElementById("anioFin").value;
     const mensajeError = document.getElementById("mensajeHistorico");
 
-    mensajeError.style.display = "none";
+    if (mensajeError) {
+        mensajeError.style.display = "none";
+    }
 
     let anioFin = inputFin ? parseInt(inputFin) : new Date().getFullYear();
-    let anioInicio = inputInicio ? parseInt(inputInicio) : anioFin - 5; 
+    let anioInicio = inputInicio ? parseInt(inputInicio) : anioFin - 5;
 
     try {
         const response = await fetch(`${API_URL}/historico?inicio=${anioInicio}&fin=${anioFin}`);
         const data = await response.json();
 
         if (!data.evolucion || data.evolucion.length === 0) {
-            mensajeError.textContent = "Error: No hay datos para el periodo";
-            mensajeError.style.display = "block";
-            if (chartInstance) chartInstance.destroy();
+            if (mensajeError) {
+                mensajeError.textContent = "Error: No hay datos para el periodo";
+                mensajeError.style.display = "block";
+            }
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
             return;
         }
 
         renderizarGraficaHistorico(data.evolucion);
+
     } catch (error) {
-        mensajeError.textContent = "Error al conectar con el servidor.";
-        mensajeError.style.display = "block";
+        if (mensajeError) {
+            mensajeError.textContent = "Error al conectar con el servidor.";
+            mensajeError.style.display = "block";
+        }
     }
 }
 
 function renderizarGraficaHistorico(datos) {
-    const ctx = document.getElementById('graficaHistorico').getContext('2d');
-    
+    const canvas = document.getElementById("graficaHistorico");
+
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
     if (chartInstance) {
-        chartInstance.destroy(); 
+        chartInstance.destroy();
     }
 
     const etiquetasAnios = datos.map(d => d.anio);
-    const generos = Object.keys(datos[0]).filter(key => key !== 'anio');
-    const colores = ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6'];
+    const generos = Object.keys(datos[0]).filter(key => key !== "anio");
+    const colores = ["#3498db", "#e74c3c", "#2ecc71", "#f1c40f", "#9b59b6"];
 
     const datasets = generos.map((genero, index) => ({
         label: genero.charAt(0).toUpperCase() + genero.slice(1),
@@ -365,7 +527,7 @@ function renderizarGraficaHistorico(datos) {
     }));
 
     chartInstance = new Chart(ctx, {
-        type: 'line',
+        type: "line",
         data: {
             labels: etiquetasAnios,
             datasets: datasets
@@ -374,16 +536,37 @@ function renderizarGraficaHistorico(datos) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: '#ffffff' } }
+                legend: {
+                    labels: {
+                        color: "#ffffff"
+                    }
+                }
             },
             scales: {
-                x: { ticks: { color: '#aaaaaa' }, grid: { color: '#333333' } },
-                y: { ticks: { color: '#aaaaaa' }, grid: { color: '#333333' } }
+                x: {
+                    ticks: {
+                        color: "#aaaaaa"
+                    },
+                    grid: {
+                        color: "#333333"
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: "#aaaaaa"
+                    },
+                    grid: {
+                        color: "#333333"
+                    }
+                }
             }
         }
     });
 }
 
+/* =========================================================
+   ARTISTAS
+========================================================= */
 
 
 
@@ -426,8 +609,7 @@ async function infoCantante(artista){
     document.getElementById("imagenMejorAlbum").alt = topAlbum?.nombre ?? "Sin Imagen";**/
 }
 
-
-async function buscarCantante(){
+async function buscarCantante() {
     const nomCantante = document.getElementById("inputArtista").value.trim().replace(/\s+/g, " ");
     const resultado = document.getElementById("resultadoBusqueda");
 
@@ -439,11 +621,9 @@ async function buscarCantante(){
     resultado.textContent = "Buscando...";
 
     try {
-        //const response = await fetch(`${API_URL}/artista/buscar/${encodeURIComponent(nomCantante)}`);
         const response = await fetch(`http://localhost:8000/artista/${encodeURIComponent(nomCantante)}`);
-        
-
         const data = await response.json();
+
         console.log("DATA ARTISTA:", data);
 
         if (!response.ok || data.error || !data.artista) {
@@ -464,11 +644,7 @@ async function buscarCantante(){
 
 
         idArtistaActual = data.id_artista;
-        
 
-        
-
-        //infoCantante(data.artista);
         infoCantante({
             nombre: data.artista.nombre,
             imagen: data.artista.imagen,
@@ -498,14 +674,11 @@ async function buscarCantante(){
 
         resultado.textContent = "";
 
-    }     catch (error) {
+    } catch (error) {
         console.error(error);
         resultado.textContent = "Ocurrió un error al buscar el cantante.";
     }
-
-
 }
-
 
 async function cargarHistoricoArtista() {
     if (!idArtistaActual) {
@@ -572,59 +745,211 @@ async function cargarHistoricoArtista() {
     }
 }
 
-
-
+/* =========================================================
+   EXPORTAR PDF
+========================================================= */
 
 async function exportarAPDF(seccionId) {
     const elemento = document.getElementById(seccionId);
-    
+
     const opt = {
-        margin:       0.5,
-        filename:     `BeatAndBit_Reporte_${seccionId}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, backgroundColor: "#0b0c10" }, 
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+        margin: 0.5,
+        filename: `BeatAndBit_Reporte_${seccionId}.pdf`,
+        image: {
+            type: "jpeg",
+            quality: 0.98
+        },
+        html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#0b0c10"
+        },
+        jsPDF: {
+            unit: "in",
+            format: "letter",
+            orientation: "landscape"
+        }
     };
 
     await html2pdf().set(opt).from(elemento).save();
 }
 
+/* =========================================================
+   DEMOGRAFÍA
+========================================================= */
+
+let datosOyentes = [];
+let ordenDescendente = true;
+
+async function cargarTopOyentes() {
+    const btn = document.getElementById("btnTopOyentes");
+    const mensaje = document.getElementById("mensajeDemografia");
+    const tabla = document.getElementById("tablaTopOyentes");
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Cargando...";
+    }
+
+    if (mensaje) {
+        mensaje.style.display = "none";
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/top-audiencia-regiones`);
+
+        if (!response.ok) {
+            throw new Error("Error en la API");
+        }
+
+        const data = await response.json();
+
+        datosOyentes = data.top_audiencia || [];
+        ordenDescendente = true;
+
+        const colOyentes = document.getElementById("colOyentes");
+
+        if (colOyentes) {
+            colOyentes.textContent = "Oyentes Totales ⬇";
+        }
+
+        renderizarTablaOyentes();
+
+        if (tabla) {
+            tabla.style.display = "table";
+        }
+
+    } catch (error) {
+        if (mensaje) {
+            mensaje.textContent = "Error de carga de audiencia. No se pudo obtener la información.";
+            mensaje.style.display = "block";
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Top Oyentes por Región";
+        }
+    }
+}
+
+function renderizarTablaOyentes() {
+    const tbody = document.querySelector("#tablaTopOyentes tbody");
+
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    const datosOrdenados = [...datosOyentes].sort((a, b) => {
+        const valA = a.oyentes === "N/A" ? -1 : a.oyentes;
+        const valB = b.oyentes === "N/A" ? -1 : b.oyentes;
+
+        if (ordenDescendente) {
+            return valB - valA;
+        } else {
+            return valA - valB;
+        }
+    });
+
+    datosOrdenados.forEach((item, index) => {
+        const oyentesDisplay = item.oyentes === "N/A"
+            ? "N/A"
+            : Number(item.oyentes).toLocaleString();
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.region}</td>
+                <td>${oyentesDisplay}</td>
+            </tr>
+        `;
+    });
+}
+
+function invertirOrdenOyentes() {
+    ordenDescendente = !ordenDescendente;
+
+    const colOyentes = document.getElementById("colOyentes");
+
+    if (colOyentes) {
+        colOyentes.textContent = ordenDescendente
+            ? "Oyentes Totales ⬇"
+            : "Oyentes Totales ⬆";
+    }
+
+    renderizarTablaOyentes();
+}
+
+/* =========================================================
+   EVENTOS INICIALES
+========================================================= */
 
 window.onload = () => {
     mostrarSeccion("inicio");
     cargarTopGlobal();
     cargarPaisesDisponibles();
-    cargarTopPaises();
-    setInterval(cargarTopGlobal, 60000);
+    cargarTopPaises("", "A");
 
+    setInterval(cargarTopGlobal, 60000);
 };
 
 document.addEventListener("DOMContentLoaded", () => {
     const btnSincronizar = document.getElementById("btnSincronizar");
     const btnGenerarGrafica = document.getElementById("btnGenerarGrafica");
-    
-    if(btnSincronizar) {
+    const btnComparar = document.getElementById("btnComparar");
+
+    if (btnComparar) {
+        btnComparar.addEventListener("click", () => {
+            comparacionActiva = !comparacionActiva;
+
+            const panelB = document.getElementById("panelB");
+
+            if (!panelB) return;
+
+            if (comparacionActiva) {
+                panelB.style.display = "block";
+                btnComparar.textContent = "Cerrar Comparación";
+
+                const selectPaisB = document.getElementById("selectPaisB");
+
+                if (selectPaisB && selectPaisB.value) {
+                    cargarTopPaises(selectPaisB.value, "B");
+                    cargarCiudadesDisponible(selectPaisB.value, "B");
+                }
+
+            } else {
+                panelB.style.display = "none";
+                btnComparar.textContent = "Comparar Ubicaciones";
+            }
+        });
+    }
+
+    if (btnSincronizar) {
         btnSincronizar.addEventListener("click", async () => {
             btnSincronizar.disabled = true;
+
             const textoOriginal = btnSincronizar.innerHTML;
+
             btnSincronizar.innerHTML = "Sincronizando...";
             btnSincronizar.style.opacity = "0.7";
 
             try {
                 const response = await fetch(`${API_URL}/sincronizar`, {
-                    method: 'POST'
+                    method: "POST"
                 });
+
                 const result = await response.json();
 
                 if (result.status === "success") {
-                    alert(result.mensaje); 
+                    alert(result.mensaje);
                 } else if (result.status === "warning") {
-                    alert(result.mensaje); 
+                    alert(result.mensaje);
                 } else {
                     alert("Error en el servidor al intentar sincronizar.");
                 }
+
             } catch (error) {
                 alert("Error: Sincronización parcial");
+
             } finally {
                 btnSincronizar.innerHTML = textoOriginal;
                 btnSincronizar.disabled = false;
@@ -644,25 +969,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (btnExportar) {
         btnExportar.addEventListener("click", () => {
-            modalExportar.style.display = "flex";
+            if (modalExportar) {
+                modalExportar.style.display = "flex";
+            }
         });
     }
 
     if (btnCancelarExportar) {
         btnCancelarExportar.addEventListener("click", () => {
-            modalExportar.style.display = "none";
+            if (modalExportar) {
+                modalExportar.style.display = "none";
+            }
         });
     }
 
     if (btnConfirmarExportar) {
         btnConfirmarExportar.addEventListener("click", async () => {
-            modalExportar.style.display = "none";
+            if (modalExportar) {
+                modalExportar.style.display = "none";
+            }
 
             try {
-                const secciones = ["inicio", "paises", "artistas", "historico"];
+                const secciones = ["inicio", "paises", "artistas", "historico", "demografia"];
                 let seccionVisibleId = null;
+
                 for (let sec of secciones) {
                     const el = document.getElementById(sec);
+
                     if (el && el.style.display !== "none") {
                         seccionVisibleId = sec;
                         break;
@@ -674,13 +1007,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 await exportarAPDF(seccionVisibleId);
+
             } catch (error) {
                 alert("Error al procesar el archivo");
             }
         });
     }
+
+    const btnTopOyentes = document.getElementById("btnTopOyentes");
+
+    if (btnTopOyentes) {
+        btnTopOyentes.addEventListener("click", cargarTopOyentes);
+    }
+
+    const colOyentes = document.getElementById("colOyentes");
+
+    if (colOyentes) {
+        colOyentes.addEventListener("click", invertirOrdenOyentes);
+    }
 });
-
-
-
-

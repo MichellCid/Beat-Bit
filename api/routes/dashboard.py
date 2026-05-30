@@ -7,10 +7,17 @@ from servicios.servicios_lastfm import (
     obtener_ciudades_por_pais,
     obtener_top_ciudad,
     obtener_paises_disponibles,
-    obtener_artista_info  
+    obtener_artista_info,
+    obtener_top_audiencia_regiones
 )
 
 router = APIRouter(prefix="/api")
+
+@router.get("/top-audiencia-regiones")
+def top_audiencia_regiones():
+    return {
+        "top_audiencia": obtener_top_audiencia_regiones()
+    }
 
 @router.get("/top-global")
 def top_global():

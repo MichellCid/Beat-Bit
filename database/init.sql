@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS dim_tiempo (
 
 CREATE TABLE IF NOT EXISTS dim_cancion (
     id_cancion SERIAL PRIMARY KEY,
-    titulo VARCHAR(255) UNIQUE NOT NULL,
+    nombre_cancion VARCHAR(255) UNIQUE NOT NULL,
     id_artista INT REFERENCES dim_artista(id_artista)
 );
 
@@ -113,5 +113,4 @@ INSERT INTO dim_region (codigo, nombre) VALUES
 ('SR', 'Surinam'),
 ('TT', 'Trinidad y Tobago'),
 ('UY', 'Uruguay'),
-('VE', 'Venezuela')
-ON CONFLICT (codigo) DO NOTHING;
+('VE', 'Venezuela');

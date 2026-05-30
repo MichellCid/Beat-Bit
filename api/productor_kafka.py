@@ -12,8 +12,7 @@ def iniciar_productor():
     intentos = 0
     productor = None
     
-    # Intentar conectar durante 60 segundos
-    while intentos < 12:
+    while intentos < 20:
         try:
             print(f"Intentando conectar a Kafka... (Intento {intentos + 1})")
             productor = KafkaProducer(
@@ -24,7 +23,7 @@ def iniciar_productor():
             break
         except NoBrokersAvailable:
             intentos += 1
-            time.sleep(5)
+            time.sleep(10)
     
     if not productor:
         print("No se pudo conectar a Kafka tras varios intentos.")
