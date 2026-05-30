@@ -137,50 +137,15 @@
                 </table>
             </section>
         </div>
+    
 
 <!-- ------------------------------------------------------------------------------------------------------------------------------->
  <!-- Pantalla de la seccion del cantante-->
 
         <div id="artistas" style="display: none;">
 
-            <section class="card">
-                <h2>Análisis por artistas</h2>
-                <table class="tabla" id="tablaTopArtistas">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Artista</th>
-                            <th>Reproducciones/seguidores</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </section>
-        </div>
 
-        <div id="historico" style="display: none;">
-            <section class="card">
-                <h2>Evolución de Modas Musicales</h2>
-                <div class="filtro-pais" style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
-                    <label for="anioInicio">Año Inicio:</label>
-                    <input type="number" id="anioInicio" placeholder="Ej. 2018" min="1950" max="2026" style="width: 100px;">
-                    
-                    <label for="anioFin">Año Fin:</label>
-                    <input type="number" id="anioFin" placeholder="Ej. 2023" min="1950" max="2026" style="width: 100px;">
-                    
-                    <button id="btnGenerarGrafica" class="btn-primary">Generar Gráfica</button>
-                </div>
-
-                <p id="mensajeHistorico" class="mensaje-error" style="display: none;"></p>
-
-                <div style="position: relative; height: 400px; width: 100%;">
-                    <canvas id="graficaHistorico"></canvas>
-                </div>
-            </section>
-        </div>
-
-                <h2>Analisis por artistas</h2>
+             <h2>Analisis por artistas</h2>
 
                 <section class="card">
                     <h3>Buscar cantante</h3>
@@ -237,8 +202,51 @@
                     <div id="mapaGiras"></div>
                 </section>
             
+
+            <section class="card">
+                <h2>Análisis por artistas</h2>
+                <table class="tabla" id="tablaTopArtistas">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Artista</th>
+                            <th>Reproducciones/seguidores</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+
+
             </section>
+        </div>
+
+        
+
+               
 <!-- -------------------------------------------------------------------------------------------------------------------------------------------------- -->        
+
+        <div id="historico" style="display: none;">
+            <section class="card">
+                <h2>Evolución de Modas Musicales</h2>
+                <div class="filtro-pais" style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+                    <label for="anioInicio">Año Inicio:</label>
+                    <input type="number" id="anioInicio" placeholder="Ej. 2018" min="1950" max="2026" style="width: 100px;">
+                    
+                    <label for="anioFin">Año Fin:</label>
+                    <input type="number" id="anioFin" placeholder="Ej. 2023" min="1950" max="2026" style="width: 100px;">
+                    
+                    <button id="btnGenerarGrafica" class="btn-primary">Generar Gráfica</button>
+                </div>
+
+                <p id="mensajeHistorico" class="mensaje-error" style="display: none;"></p>
+
+                <div style="position: relative; height: 400px; width: 100%;">
+                    <canvas id="graficaHistorico"></canvas>
+                </div>
+            </section>
+        </div>
+
 
     </main>
 

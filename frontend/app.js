@@ -23,8 +23,8 @@ async function cargarTopGlobal() {
         localStorage.setItem("cache_top_global", JSON.stringify(data));
         renderizarDashboardGlobal(data);
 
-        document.getElementById("artistaNum1").textContent =
-            data.artista_top.nombre;
+        /** //document.getElementById("artistaNum1").textContent =
+          //  data.artista_top.nombre;
 
         const imagen = document.getElementById("imagenArtistaNum1");
 
@@ -34,22 +34,26 @@ async function cargarTopGlobal() {
         }
 
         const tbody = document.querySelector("#tablaTopMundial tbody");
-        tbody.innerHTML = "";
+        
+        if(tbody) {
+            tbody.innerHTML = "";
 
-        data.top_global
-            .sort((a, b) => Number(b.reproducciones) - Number(a.reproducciones))
-            .forEach((track, index) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${track.nombre_cancion}</td>
-                        <td>${track.nombre_artista}</td>
-                        <td>${Number(track.reproducciones).toLocaleString()}</td>
-                    </tr>
-                `;
-            });
+            data.top_global
+                .sort((a, b) => Number(b.reproducciones) - Number(a.reproducciones))
+                .forEach((track, index) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${track.nombre_cancion}</td>
+                            <td>${track.nombre_artista}</td>
+                            <td>${Number(track.reproducciones).toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+        }**/
 
     } catch (error) {
+        console.error("Error cargando top global:", error);
         if(errorMsg) {
             errorMsg.style.display = "block";
             errorMsg.textContent = "Error al cargar las métricas. Mostrando la última versión disponible.";
@@ -121,7 +125,7 @@ function renderizarDashboardGlobal(data) {
 function mostrarMensajePais(text) {
     const mensaje = document.getElementById("mensajePais");
     if (mensaje) {
-        text.textContent = text || "";
+        mensaje.textContent = text || "";
     }
 }
 
@@ -429,6 +433,12 @@ async function buscarCantante(){
 
         const data = await response.json();
         console.log("DATA ARTISTA:", data);
+
+        if (!response.ok || data.error || !data.artista) {
+            resultado.textContent = data.error || "Sin coincidencias";
+            return;
+        }
+
         console.log("DATA COMPLETA:", data);
         console.log("ARTISTA:", data.artista);
         console.log("SEGUIDORES:", data.metricas?.escuchas);
@@ -436,10 +446,7 @@ async function buscarCantante(){
         console.log("GENEROS:", data.artista.generos);
 
 
-        if (!response.ok || data.error) {
-            resultado.textContent = data.error || "Sin coincidencias";
-            return;
-        }
+        
 
         
 

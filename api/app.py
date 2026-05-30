@@ -11,12 +11,6 @@ from servicios.transformaciones import crear_esquema_data_warehouse
 from db.conexion import conexion
 
 
-def tarea_sincronizacion_automatica():
-    print("Ejecutando sincronización automática en segundo plano...")
-    sincronizar_datos()
-
-
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,19 +18,23 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Beat & Bit API", lifespan=lifespan)
 
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000"
-                   ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(dashboard_router)
+
+
+
+#def tarea_sincronizacion_automatica():
+ #   print("Ejecutando sincronización automática en segundo plano...")
+  #  sincronizar_datos()
+
+
 
 @app.get("/")
 def home():
@@ -52,8 +50,8 @@ def endpoint_sincronizar():
         "transformacion": resultado_transformacion
     }
 
-    resultado = sincronizar_datos()
-    return resultado
+    #resultado = sincronizar_datos()
+    #return resultado
 
 @app.get("/test-db")
 def test_db():

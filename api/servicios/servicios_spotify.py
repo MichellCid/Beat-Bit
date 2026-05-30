@@ -10,7 +10,7 @@ load_dotenv()
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 
-SPOTIFY_SEARCH_MARKET = os.getenv("SPOTIFY_SEARCH_MARKET", "MX")
+#SPOTIFY_SEARCH_MARKET = os.getenv("SPOTIFY_SEARCH_MARKET", "MX")
 
 SPOTIFY_BASE_URL = "https://api.spotify.com/v1"
 
@@ -34,7 +34,7 @@ CITY_OPTIONS = {
     "Brasil": ["São Paulo", "Río de Janeiro", "Brasilia"]
 }
 
-#SPOTIFY_SEARCH_MARKET = "US"
+SPOTIFY_SEARCH_MARKET = "US"
 
 
 def _spotify_get_access_token():
@@ -59,6 +59,7 @@ def _spotify_get_access_token():
         SPOTIFY_TOKEN_CACHE["token"] = token_data["access_token"]
         SPOTIFY_TOKEN_CACHE["expires_at"] = now + token_data.get("expires_in", 3600)
         return SPOTIFY_TOKEN_CACHE["token"]
+    
     except requests.exceptions.RequestException as e:
         print("error token")
         return None
@@ -116,7 +117,7 @@ def _spotify_get(path, params=None):
             url,
             headers=headers,
             params=params,
-            timeout=30
+            timeout=15
         )
 
         print("SPOTIFY URL:", response.url)

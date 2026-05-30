@@ -90,27 +90,26 @@ def obtener_top_global():
 
         data = response.json()
 
-        print("STATUS:", response.status_code)
-        print("API KEY:", LASTFM_API_KEY)
-        print("DATA LASTFM:", data)
+        #print("STATUS:", response.status_code)
+        #print("API KEY:", LASTFM_API_KEY)
+        #print("DATA LASTFM:", data)
 
-        print("RESPUESTA LASTFM:")
+        #print("RESPUESTA LASTFM:")
         print(data)
 
-        tracks = data.get("tracks", {}).get("track", [])
+        #tracks = data.get("tracks", {}).get("track", [])
 
-        if not tracks:
-            return []
+        #if not tracks:
+         #   return []
 
         top_global = []
 
-        for i in tracks:
+        for i in data["tracks"]["track"]:
             top_global.append({
-                "nombre_cancion": i.get("name", "Sin nombre"),
-                "nombre_artista": i.get("artist", {}).get("name", "Desconocido"),
-                "reproducciones": int(i.get("playcount", 0))
+                "nombre_cancion": i["name"],
+                "nombre_artista": i["artist"]["name"],
+                "reproducciones": int(i["playcount"])
             })
-
         return top_global
 
     except Exception as e:
