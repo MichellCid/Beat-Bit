@@ -261,4 +261,63 @@ def obtener_reproducciones_cancion(nombre_cancion, nombre_artista):
     except (ValueError, TypeError):
         return 0
 
+def obtener_top_audiencia_regiones():
+    resultados = []
+    # Using predefined countries. For each one, get top artists and sum their listeners.
+    for pais in DEFAULT_COUNTRIES:
+        api_country = PAISES_MAP.get(pais)
+        if not api_country:
+            continue
+        try:
+            response = requests.get(
+                LASTFM_URL,
+                params={
+                    "method": "geo.getTopArtists",
+                    "country": api_country,
+                    "api_key": LASTFM_API_KEY,
+                    "format": "json",
+                    "limit": 50 
+                },
+                verify=False,
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
+            artists = data.get("topartists", {}).get("artist", [])
+            
+            # Ex-01: if no data or listeners are missing, return N/A
+            if not artists:
+                 resultados.append({"region": pais, "oyentes": "N/A"})
+                 continue
+
+            oyentes_totales = 0
+            has_data = False
+            for artist in artists:
+                listeners = artist.get("listeners")
+                if listeners is not None:
+                    oyentes_totales += int(listeners)
+                    has_data = True
+            
+            if has_data:
+                resultados.append({
+                    "region": pais,
+                    "oyentes": oyentes_totales
+                })
+            else:
+                resultados.append({
+                    "region": pais,
+                    "oyentes": "N/A"
+                })
+
+        except Exception as e:
+            print(f"Error obteniendo audiencia para {pais}: {e}")
+            resultados.append({
+                "region": pais,
+                "oyentes": "N/A"
+            })
+            
+    # Default sorting: highest to lowest
+    resultados.sort(key=lambda x: x["oyentes"] if isinstance(x["oyentes"], int) else -1, reverse=True)
+    return resultados
+
     

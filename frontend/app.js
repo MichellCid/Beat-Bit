@@ -4,7 +4,7 @@ let idArtistaActual = null;
 let graficaArtista = null;
 
 function mostrarSeccion(id) {
-    document.querySelectorAll("#inicio, #paises, #artistas, #historico").forEach(sec => {
+    document.querySelectorAll("#inicio, #paises, #artistas, #historico, #demografia").forEach(sec => {
         sec.style.display = "none";
     });
     document.getElementById(id).style.display = "block";
@@ -555,6 +555,85 @@ async function exportarAPDF(seccionId) {
 }
 
 
+let datosOyentes = [];
+let ordenDescendente = true;
+
+async function cargarTopOyentes() {
+    const btn = document.getElementById("btnTopOyentes");
+    const mensaje = document.getElementById("mensajeDemografia");
+    const tabla = document.getElementById("tablaTopOyentes");
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Cargando...";
+    }
+    if (mensaje) mensaje.style.display = "none";
+
+    try {
+        const response = await fetch(`${API_URL}/top-audiencia-regiones`);
+        if (!response.ok) throw new Error("Error en la API");
+        const data = await response.json();
+        
+        datosOyentes = data.top_audiencia || [];
+        ordenDescendente = true;
+        
+        const colOyentes = document.getElementById("colOyentes");
+        if (colOyentes) colOyentes.textContent = "Oyentes Totales ⬇";
+
+        renderizarTablaOyentes();
+        if (tabla) tabla.style.display = "table";
+
+    } catch (error) {
+        if (mensaje) {
+            mensaje.textContent = "Error de carga de audiencia. No se pudo obtener la información.";
+            mensaje.style.display = "block";
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Top Oyentes por Región";
+        }
+    }
+}
+
+function renderizarTablaOyentes() {
+    const tbody = document.querySelector("#tablaTopOyentes tbody");
+    if (!tbody) return;
+    
+    tbody.innerHTML = "";
+
+    const datosOrdenados = [...datosOyentes].sort((a, b) => {
+        const valA = a.oyentes === "N/A" ? -1 : a.oyentes;
+        const valB = b.oyentes === "N/A" ? -1 : b.oyentes;
+
+        if (ordenDescendente) {
+            return valB - valA;
+        } else {
+            return valA - valB;
+        }
+    });
+
+    datosOrdenados.forEach((item, index) => {
+        const oyentesDisplay = item.oyentes === "N/A" ? "N/A" : Number(item.oyentes).toLocaleString();
+        tbody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.region}</td>
+                <td>${oyentesDisplay}</td>
+            </tr>
+        `;
+    });
+}
+
+function invertirOrdenOyentes() {
+    ordenDescendente = !ordenDescendente;
+    const colOyentes = document.getElementById("colOyentes");
+    if (colOyentes) {
+        colOyentes.textContent = ordenDescendente ? "Oyentes Totales ⬇" : "Oyentes Totales ⬆";
+    }
+    renderizarTablaOyentes();
+}
+
 window.onload = () => {
     mostrarSeccion("inicio");
     cargarTopGlobal();
@@ -624,7 +703,7 @@ document.addEventListener("DOMContentLoaded", () => {
             modalExportar.style.display = "none";
 
             try {
-                const secciones = ["inicio", "paises", "artistas", "historico"];
+                const secciones = ["inicio", "paises", "artistas", "historico", "demografia"];
                 let seccionVisibleId = null;
                 for (let sec of secciones) {
                     const el = document.getElementById(sec);
@@ -643,6 +722,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 alert("Error al procesar el archivo");
             }
         });
+    }
+
+    const btnTopOyentes = document.getElementById("btnTopOyentes");
+    if (btnTopOyentes) {
+        btnTopOyentes.addEventListener("click", cargarTopOyentes);
+    }
+
+    const colOyentes = document.getElementById("colOyentes");
+    if (colOyentes) {
+        colOyentes.addEventListener("click", invertirOrdenOyentes);
     }
 });
 
