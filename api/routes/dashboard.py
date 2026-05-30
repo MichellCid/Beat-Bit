@@ -1,3 +1,4 @@
+from servicios.servicios_spotify import busquedaArtista, obtenerTopCancionesArtista, obtenerAlbumPopular
 from fastapi import APIRouter
 from servicios.servicios_lastfm import (
     obtener_top_global,
@@ -9,7 +10,7 @@ from servicios.servicios_lastfm import (
     obtener_artista_info  
 )
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 @router.get("/top-global")
 def top_global():
@@ -89,3 +90,26 @@ def obtener_historico(inicio: int = None, fin: int = None):
         datos_filtrados = datos_completos
 
     return {"evolucion": datos_filtrados}
+
+#-- ----------------------------------------------------------------------------------------------------------------------
+#Endpoints para obtener datos de los artistas desde Spotify
+
+@router.get("/artista/buscar/{nombre}")
+def buscarArtista(nombre: str):
+    artista = busquedaArtista(nombre)
+
+    print("artista", artista)
+
+    if not artista:
+        return {
+            "error": "Artista no encontrado"
+        }
+
+    return {
+        #"nombre": artista.get("name"),
+        #"seguidores": artista.get("followers", {}).get("total", 0),
+        #"generos": artista.get("genres", []),
+        #"imagen": artista.get("images", [{}])[0].get("url", "")
+        "artista": artista
+    }
+

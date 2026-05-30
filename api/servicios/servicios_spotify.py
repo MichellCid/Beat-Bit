@@ -2,10 +2,18 @@ import os
 import base64
 import time
 import requests
+from dotenv import load_dotenv
 from requests.exceptions import HTTPError
+
+load_dotenv()
 
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
+
+SPOTIFY_SEARCH_MARKET = os.getenv("SPOTIFY_SEARCH_MARKET", "MX")
+
+SPOTIFY_BASE_URL = "https://api.spotify.com/v1"
+
 SPOTIFY_TOKEN_CACHE = {"token": None, "expires_at": 0}
 
 COUNTRY_CODE_MAP = {
@@ -26,7 +34,7 @@ CITY_OPTIONS = {
     "Brasil": ["São Paulo", "Río de Janeiro", "Brasilia"]
 }
 
-SPOTIFY_SEARCH_MARKET = "US"
+#SPOTIFY_SEARCH_MARKET = "US"
 
 
 def _spotify_get_access_token():
@@ -35,21 +43,28 @@ def _spotify_get_access_token():
         return SPOTIFY_TOKEN_CACHE["token"]
 
     auth_header = base64.b64encode(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}".encode()).decode()
-    response = requests.post(
-        "https://accounts.spotify.com/api/token",
-        data={"grant_type": "client_credentials"},
-        headers={"Authorization": f"Basic {auth_header}"},
-        timeout=15
-    )
-    response.raise_for_status()
-    token_data = response.json()
+    try:
+        response = requests.post(
+            "https://accounts.spotify.com/api/token",
+            data={"grant_type": "client_credentials"},
+            headers={"Authorization": f"Basic {auth_header}"},
+            timeout=15
+        )
+    
+   
+        response.raise_for_status()
+        token_data = response.json()
+        print("TOKEN RESPONSE:", token_data)
 
-    SPOTIFY_TOKEN_CACHE["token"] = token_data["access_token"]
-    SPOTIFY_TOKEN_CACHE["expires_at"] = now + token_data.get("expires_in", 3600)
-    return SPOTIFY_TOKEN_CACHE["token"]
+        SPOTIFY_TOKEN_CACHE["token"] = token_data["access_token"]
+        SPOTIFY_TOKEN_CACHE["expires_at"] = now + token_data.get("expires_in", 3600)
+        return SPOTIFY_TOKEN_CACHE["token"]
+    except requests.exceptions.RequestException as e:
+        print("error token")
+        return None
 
 
-def _spotify_get(path, params=None):
+#def _spotify_get(path, params=None):
     token = _spotify_get_access_token()
     url = f"https://api.spotify.com/v1{path}"
     response = requests.get(
@@ -60,6 +75,60 @@ def _spotify_get(path, params=None):
     )
     response.raise_for_status()
     return response.json()
+
+
+#def _spotify_get(path, params=None):
+    token = _spotify_get_access_token()
+    url = f"https://api.spotify.com/v1{path}"
+
+    response = requests.get(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json"
+        },
+        params=params,
+        timeout=15
+    )
+
+    print("SPOTIFY URL:", response.url)
+    print("SPOTIFY STATUS:", response.status_code)
+    print("SPOTIFY BODY:", response.text)
+
+    response.raise_for_status()
+    return response.json()
+
+
+def _spotify_get(path, params=None):
+    token = _spotify_get_access_token()
+
+    if not token:
+        return {}
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    url = f"{SPOTIFY_BASE_URL}{path}"
+
+    try:
+        response = requests.get(
+            url,
+            headers=headers,
+            params=params,
+            timeout=30
+        )
+
+        print("SPOTIFY URL:", response.url)
+        print("SPOTIFY STATUS:", response.status_code)
+        print("SPOTIFY BODY:", response.text)
+
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        print("ERROR SPOTIFY GET:", e)
+        return {}
 
 
 def _normalize_playlist_name(name):
@@ -147,3 +216,79 @@ def obtener_top_ciudad_spotify(pais, ciudad):
 
 def obtener_paises_disponibles():
     return list(COUNTRY_CODE_MAP.keys())
+
+#-----------------------------------------------------------------------------------------------------------------------------------
+# peticiones para datos del artista
+
+def busquedaArtista(nombre):
+    data = _spotify_get("/search", {
+        "q": nombre,
+        "type": "artist",
+        "limit": 1
+    })
+
+    artistas = data.get("artists", {}).get("items", [])
+
+    if not artistas:
+        return None
+
+    artistaBase = artistas[0]
+
+    artist_id = artistaBase.get("id")
+
+    artista = _spotify_get(f"/artists/{artist_id}")
+    print("ARTISTA DETALLADO:", artista)
+
+
+    imagen = ""
+    if artista.get("images"):
+        imagen = artista["images"][0].get("url", "")
+
+    return {
+        "id": artista.get("id"),
+        "nombre": artista.get("name"),
+        "seguidores": artista.get("followers", {}).get("total", 0),
+        "popularidad": artista.get("popularity", 0),
+        "generos": artista.get("genres", []),
+        "imagen": imagen
+    }
+
+
+def obtenerTopCancionesArtista(artist_id):
+    data = _spotify_get(
+        f"/artists/{artist_id}/top-tracks",
+        {"market": SPOTIFY_SEARCH_MARKET}
+    )
+
+    canciones = []
+
+    for track in data.get("tracks", [])[:10]:
+        imagen_album = ""
+
+        if track.get("album", {}).get("images"):
+            imagen_album = track["album"]["images"][0].get("url", "")
+
+        canciones.append({
+            "id": track.get("id"),
+            "nombre": track.get("name"),
+            "album": track.get("album", {}).get("name", "N/D"),
+            "popularidad": track.get("popularity", 0),
+            "imagen_album": imagen_album
+        })
+
+    return canciones
+
+
+def obtenerAlbumPopular(canciones):
+    if not canciones:
+        return {
+            "nombre": "No disponible",
+            "imagen": ""
+        }
+
+    cancion_top = max(canciones, key=lambda c: c.get("popularidad", 0))
+
+    return {
+        "nombre": cancion_top.get("album", "No disponible"),
+        "imagen": cancion_top.get("imagen_album", "")
+    }

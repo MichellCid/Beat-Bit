@@ -131,7 +131,11 @@
             </section>
         </div>
 
+<!-- ------------------------------------------------------------------------------------------------------------------------------->
+ <!-- Pantalla de la seccion del cantante-->
+
         <div id="artistas" style="display: none;">
+
             <section class="card">
                 <h2>Análisis por artistas</h2>
                 <table class="tabla" id="tablaTopArtistas">
@@ -168,6 +172,67 @@
                 </div>
             </section>
         </div>
+
+                <h2>Analisis por artistas</h2>
+
+                <section class="card">
+                    <h3>Buscar cantante</h3>
+
+                    <div class="buscador">  
+                        <input type="Text" id="inputArtista" list="artistasDatalist" placeholder="Ingresa el nombre del cantante">
+                        <button onClick="buscarCantante()">Buscar</button>
+                    </div>
+                    <p id="resultadoBusqueda"></p>
+                </section>
+
+                <section class="card perfil-cantante">
+                    
+                    <p id="nombrePerfilArtista"></p>
+                    
+                    <img id="imagenPerfilArtista" src="" alt="Imagen del artista" width="180">
+                    
+                    <p> Seguidores: </p>
+                    <p id="seguidoresArtista"></p>
+
+                    <p>Popularidad: </p>
+                    <p id="popularidadArtista"></p>
+
+                    <p> Generos: </p>
+                    <p id="generosArtista"></p>
+
+                    <p> Album mas escuchado: </p>
+                    <p id="mejorAlbumArtista"></p>
+                    <img id="imagenMejorAlbum" src="" alt="Imagen del album" width="180">
+
+                </section>
+                
+                <section class="top" >
+                    <h3>Top 10 canciones del artista</h3>
+                    <table class="tabla" id="topCancionesArtista">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Canción</th>
+                                <th>Albúm</th>
+                                <th>Reproducciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        
+                        </tbody>
+                    </table>
+
+                </section>
+
+                <section class="giras">
+                    <h3>Recomendaciones para giras</h3>
+
+                    <div id="mapaGiras"></div>
+                </section>
+            
+            </section>
+<!-- -------------------------------------------------------------------------------------------------------------------------------------------------- -->        
+
     </main>
 
     <footer>

@@ -23,6 +23,32 @@ async function cargarTopGlobal() {
         localStorage.setItem("cache_top_global", JSON.stringify(data));
         renderizarDashboardGlobal(data);
 
+        document.getElementById("artistaNum1").textContent =
+            data.artista_top.nombre;
+
+        const imagen = document.getElementById("imagenArtistaNum1");
+
+        if (imagen) {
+            imagen.src = data.artista_top.imagen || "https://via.placeholder.com/180?text=Sin+Imagen";
+            imagen.alt = data.artista_top.nombre || "Sin Imagen";
+        }
+
+        const tbody = document.querySelector("#tablaTopMundial tbody");
+        tbody.innerHTML = "";
+
+        data.top_global
+            .sort((a, b) => Number(b.reproducciones) - Number(a.reproducciones))
+            .forEach((track, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${track.nombre_cancion}</td>
+                        <td>${track.nombre_artista}</td>
+                        <td>${Number(track.reproducciones).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
     } catch (error) {
         if(errorMsg) {
             errorMsg.style.display = "block";
@@ -90,6 +116,7 @@ function renderizarDashboardGlobal(data) {
         });
     }
 }
+
 
 function mostrarMensajePais(text) {
     const mensaje = document.getElementById("mensajePais");
@@ -351,12 +378,99 @@ function renderizarGraficaHistorico(datos) {
     });
 }
 
+
+
+
+//-----------------------------------------------------------------------------------------------------------------------------
+// funciones para la pantalla de artistas
+
+async function infoCantante(artista, topAlbum=null){
+    document.getElementById("nombrePerfilArtista").textContent = artista.nombre;
+    document.getElementById("imagenPerfilArtista").src = artista.imagen || "https://via.placeholder.com/180?text=Sin+Imagen";
+    document.getElementById("imagenPerfilArtista").alt = artista.nombre || "Sin Imagen";
+    
+    document.getElementById("seguidoresArtista").textContent = Number(artista.seguidores ?? 0).toLocaleString();
+    document.getElementById("popularidadArtista").textContent = artista.popularidad ?? "0";
+    
+    document.getElementById("generosArtista").textContent = (artista.generos && artista.generos.length > 0) ? artista.generos.join(", ") : "No especificados";
+    
+
+    if (topAlbum) {
+        document.getElementById("mejorAlbumArtista").textContent = topAlbum.nombre || "No disponible";
+        document.getElementById("imagenMejorAlbum").src = topAlbum.imagen ?? "https://via.placeholder.com/180?text=Sin+Imagen";
+        document.getElementById("imagenMejorAlbum").alt = topAlbum.nombre ?? "Sin Imagen";
+    } else {
+        document.getElementById("mejorAlbumArtista").textContent = "Busca las canciones para cargar el álbum";
+        document.getElementById("imagenMejorAlbum").src = "https://via.placeholder.com/180?text=Sin+Datos";
+    }
+
+    
+    /**document.getElementById("mejorAlbumArtista").textContent = topAlbum?.nombre || "Sin álbum disponible";
+    document.getElementById("imagenMejorAlbum").src = topAlbum?.imagen ?? "https://via.placeholder.com/180?text=Sin+Imagen";
+    document.getElementById("imagenMejorAlbum").alt = topAlbum?.nombre ?? "Sin Imagen";**/
+}
+
+
+async function buscarCantante(){
+    const nomCantante = document.getElementById("inputArtista").value.trim().replace(/\s+/g, " ");
+    const resultado = document.getElementById("resultadoBusqueda");
+
+    if (!nomCantante) {
+        resultado.textContent = "Ingrese el nombre de un cantante.";
+        return;
+    }
+
+    resultado.textContent = "Buscando...";
+
+    try {
+        //const response = await fetch(`${API_URL}/artista/buscar/${encodeURIComponent(nomCantante)}`);
+        const response = await fetch(`http://localhost:8000/artista/${encodeURIComponent(nomCantante)}`);
+        
+
+        const data = await response.json();
+        console.log("DATA ARTISTA:", data);
+        console.log("DATA COMPLETA:", data);
+        console.log("ARTISTA:", data.artista);
+        console.log("SEGUIDORES:", data.metricas?.escuchas);
+        console.log("POPULARIDAD:", data.metricas?.popularidad);
+        console.log("GENEROS:", data.artista.generos);
+
+
+        if (!response.ok || data.error) {
+            resultado.textContent = data.error || "Sin coincidencias";
+            return;
+        }
+
+        
+
+        //infoCantante(data.artista);
+        infoCantante({
+            nombre: data.artista.nombre,
+            imagen: data.artista.imagen,
+            generos: data.artista.generos,
+            seguidores: data.metricas?.escuchas ?? 0,
+            popularidad: data.metricas?.popularidad ?? 0
+        });
+        resultado.textContent = "";
+
+    }     catch (error) {
+        console.error(error);
+        resultado.textContent = "Ocurrió un error al buscar el cantante.";
+    }
+
+
+}
+
+
+
+
 window.onload = () => {
     mostrarSeccion("inicio");
     cargarTopGlobal();
     cargarPaisesDisponibles();
     cargarTopPaises();
     setInterval(cargarTopGlobal, 60000);
+
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -397,3 +511,6 @@ document.addEventListener("DOMContentLoaded", () => {
         btnGenerarGrafica.addEventListener("click", cargarHistorico);
     }
 });
+
+
+

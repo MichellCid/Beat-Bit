@@ -5,7 +5,7 @@ def obtener_conexion_bd():
     try:
         conn = psycopg2.connect(
             host="postgres",
-            database=os.getenv("POSTGRES_DB", "dw_musica"),
+            database=os.getenv("POSTGRES_DB", "beatandbit_dwh"),
             user=os.getenv("POSTGRES_USER", "usuario"),
             password=os.getenv("POSTGRES_PASSWORD", "1234")
         )

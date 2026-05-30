@@ -2,6 +2,7 @@ services:
 
   frontend:
     build: ./frontend
+    container_name: frontendApp
     ports:
       - "3000:80"
     depends_on:
@@ -12,6 +13,11 @@ services:
     container_name: music_api
     ports:
       - "8000:8000"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     depends_on:
@@ -42,7 +48,7 @@ services:
     environment:
       POSTGRES_USER: usuario
       POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: dw_musica
+      POSTGRES_DB: beatandbit_dwh
     ports:
       - "5432:5432"
     volumes:

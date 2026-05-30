@@ -1,6 +1,9 @@
 import os
 import requests
+from dotenv import load_dotenv
 import urllib3
+
+load_dotenv()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -70,31 +73,49 @@ CITY_FALLBACK = {
 
 
 def obtener_top_global():
-    response = requests.get(
-        LASTFM_URL,
-        params={
-            "method": "chart.getTopTracks",
-            "api_key": LASTFM_API_KEY,
-            "format": "json",
-            "limit": 10
-        },
-        verify=False,
-        timeout=15
-    )
+    try:
+        response = requests.get(
+            LASTFM_URL,
+            params={
+                "method": "chart.getTopTracks",
+                "api_key": LASTFM_API_KEY,
+                "format": "json",
+                "limit": 10
+            },
+            verify=False,
+            timeout=15
+        )
 
-    response.raise_for_status()
-    data = response.json()
-    print(data)
+        response.raise_for_status()
 
-    top_global = []
+        data = response.json()
 
-    for i in data["tracks"]["track"]:
-        top_global.append({
-            "nombre_cancion": i["name"],
-            "nombre_artista": i["artist"]["name"],
-            "reproducciones": int(i["playcount"])
-        })
-    return top_global
+        print("STATUS:", response.status_code)
+        print("API KEY:", LASTFM_API_KEY)
+        print("DATA LASTFM:", data)
+
+        print("RESPUESTA LASTFM:")
+        print(data)
+
+        tracks = data.get("tracks", {}).get("track", [])
+
+        if not tracks:
+            return []
+
+        top_global = []
+
+        for i in tracks:
+            top_global.append({
+                "nombre_cancion": i.get("name", "Sin nombre"),
+                "nombre_artista": i.get("artist", {}).get("name", "Desconocido"),
+                "reproducciones": int(i.get("playcount", 0))
+            })
+
+        return top_global
+
+    except Exception as e:
+        print("ERROR EN obtener_top_global:", e)
+        return []
 
 
 def obtener_top_pais(pais):
@@ -184,12 +205,16 @@ def obtener_top_paises_globales():
     return top_paises
 
 def obtener_artista_info(nombre_artista):
-    response = requests.get(LASTFM_URL, params={
-        "method": "artist.getInfo",
-        "artist": nombre_artista,
-        "api_key": LASTFM_API_KEY,
-        "format": "json"
-    })
+    response = requests.get(
+        LASTFM_URL,
+        params={
+            "method": "artist.getInfo",
+            "artist": nombre_artista,
+            "api_key": LASTFM_API_KEY,
+            "format": "json"
+        },
+        timeout=15
+    )
 
     response.raise_for_status()
     data = response.json()
@@ -201,9 +226,14 @@ def obtener_artista_info(nombre_artista):
     if images:
         imagen_url = images[-1].get("#text", "")
 
+    stats = artista.get("stats", {})
+    
     return {
         "nombre": artista.get("name", ""),
-        "imagen_url": imagen_url
+        "imagen_url": imagen_url,
+        "escuchas": int(stats.get("listeners", 0)),
+        "reproducciones": int(stats.get("playcount", 0)),
+        "tags": [tag.get("name", "") for tag in artista.get("tags", {}).get("tag", [])]
     }
     
 def obtener_reproducciones_cancion(nombre_cancion, nombre_artista):

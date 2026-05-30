@@ -122,6 +122,7 @@ body.dark-mode {
     margin-bottom: 20px;
 }
 
+
 .mensaje-error {
     background-color: #ff4d4d;
     color: white;
@@ -261,4 +262,34 @@ input, select {
     font-size: 1.2rem;
     font-weight: bold;
     color: #ffffff; 
+}
+=======
+.barraLateral {
+    margin-top: 60px;
+    
+}
+
+
+.buscador {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.buscador input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+
+.buscador button,
+.cancion-card button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    background-color: #305d98;
+    color: white;
+    cursor: pointer;
 }
