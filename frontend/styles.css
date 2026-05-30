@@ -234,7 +234,7 @@ input, select {
 
 .leaderboard-artist {
     font-size: 0.85rem;
-    color: #aaaaaa;
+    color: #ffffff;
 }
 
 .leaderboard-right {
@@ -263,7 +263,7 @@ input, select {
     font-weight: bold;
     color: #ffffff; 
 }
-=======
+
 .barraLateral {
     margin-top: 60px;
     
@@ -293,3 +293,31 @@ input, select {
     color: white;
     cursor: pointer;
 }
+=======
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(11, 12, 16, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: #1a1a2e;
+    padding: 30px;
+    border-radius: 8px;
+    width: 300px;
+    text-align: center;
+    border: 1px solid #3498db;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+

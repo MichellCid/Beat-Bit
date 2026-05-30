@@ -6,12 +6,19 @@
     <title>Beat & bit</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="dark-mode">
     <header class="topbar">
         <h1>Beat & bit</h1>
-        <button id="btnSincronizar" class="btn-primary" style="margin-left: auto; margin-right: 20px; display: flex; align-items: center;">
-            <svg class="icono" viewBox="0 0 24 24" style="fill: white; width: 18px; height: 18px; margin-right: 8px;">
+        <button id="btnExportar" class="btn-primary" style="margin-left: auto; display: flex; align-items: center;">
+            <svg class="icono" viewBox="0 0 24 24" style="fill: #ffffff; width: 18px; height: 18px; margin-right: 8px;">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            Exportar Reporte
+        </button>
+        <button id="btnSincronizar" class="btn-primary" style="margin-left: 20px; margin-right: 20px; display: flex; align-items: center;">
+            <svg class="icono" viewBox="0 0 24 24" style="fill: #ffffff; width: 18px; height: 18px; margin-right: 8px;">
                 <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
             </svg>
             Sincronizar APIs
@@ -234,6 +241,17 @@
 <!-- -------------------------------------------------------------------------------------------------------------------------------------------------- -->        
 
     </main>
+
+    <div id="modalExportar" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 style="color: #ffffff; margin-top: 0;">Exportar Reporte</h2>
+            <p style="color: #ffffff; margin-bottom: 20px;">¿Deseas descargar el reporte actual en formato PDF?</p>
+            <div class="modal-buttons">
+                <button id="btnCancelarExportar" class="btn-secondary" style="color: #ffffff;">Cancelar</button>
+                <button id="btnConfirmarExportar" class="btn-primary" style="color: #ffffff;">Descargar</button>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <p>© 2026 Ingenieria de datos</p>

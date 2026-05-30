@@ -1,14 +1,13 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from apscheduler.schedulers.background import BackgroundScheduler
 from routes.dashboard import router as dashboard_router
 from servicios.sincronizacion import sincronizar_datos
 from servicios.servicios_spotify import busquedaArtista, obtenerTopCancionesArtista
 from servicios.servicios_lastfm import obtener_artista_info
 from servicios.servicios_youtube import buscar_metricas_youtube
 from servicios.calculos import calcular_popularidad
-
+from servicios.transformaciones import crear_esquema_data_warehouse
 from db.conexion import conexion
 
 
@@ -16,13 +15,12 @@ def tarea_sincronizacion_automatica():
     print("Ejecutando sincronización automática en segundo plano...")
     sincronizar_datos()
 
+
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(tarea_sincronizacion_automatica, 'interval', minutes=1) 
-    scheduler.start()
     yield
-    scheduler.shutdown()
 
 app = FastAPI(title="Beat & Bit API", lifespan=lifespan)
 
@@ -47,6 +45,13 @@ def home():
 
 @app.post("/api/sincronizar")
 def endpoint_sincronizar():
+    resultado_extraccion = sincronizar_datos()
+    resultado_transformacion = crear_esquema_data_warehouse()
+    return {
+        "extraccion": resultado_extraccion,
+        "transformacion": resultado_transformacion
+    }
+
     resultado = sincronizar_datos()
     return resultado
 
@@ -126,3 +131,4 @@ def obtener_artista(nombre: str):
         },
         "regiones": youtube.get("regiones", [])
     }
+    

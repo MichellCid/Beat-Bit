@@ -95,24 +95,24 @@ function renderizarDashboardGlobal(data) {
             const rankClass = rank <= 3 ? `top-${rank}` : '';
             const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(track.nombre_artista)}&background=1a1a1a&color=fff&size=60`;
 
-            leaderboard.innerHTML += `
-                <div class="leaderboard-row ${rankClass}">
-                    <div class="leaderboard-left">
-                        <div class="rank-number">${rankStr}</div>
-                        <img src="${avatarUrl}" class="leaderboard-avatar" alt="Avatar de ${track.nombre_artista}">
-                        <div class="leaderboard-info">
-                            <div class="leaderboard-title">${track.nombre_cancion.toUpperCase()}</div>
-                            <div class="leaderboard-artist">👤 ${track.nombre_artista}</div>
+                    leaderboard.innerHTML += `
+                        <div class="leaderboard-row ${rankClass}">
+                            <div class="leaderboard-left">
+                                <div class="rank-number">${rankStr}</div>
+                                <img src="${avatarUrl}" class="leaderboard-avatar" alt="Avatar de ${track.nombre_artista}">
+                                <div class="leaderboard-info">
+                                    <div class="leaderboard-title">${track.nombre_cancion.toUpperCase()}</div>
+                                    <div class="leaderboard-artist">👤 ${track.nombre_artista}</div>
+                                </div>
+                            </div>
+                            <div class="leaderboard-right">
+                                <div class="leaderboard-score-box">
+                                    <span class="score-label">REPRODUCCIONES</span>
+                                    <span class="score-value">${Number(track.reproducciones).toLocaleString()}</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="leaderboard-right">
-                        <div class="leaderboard-score-box">
-                            <span class="score-label">REPRODUCCIONES</span>
-                            <span class="score-value">${Number(track.reproducciones).toLocaleString()}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
+                    `;
         });
     }
 }
@@ -121,7 +121,7 @@ function renderizarDashboardGlobal(data) {
 function mostrarMensajePais(text) {
     const mensaje = document.getElementById("mensajePais");
     if (mensaje) {
-        mensaje.textContent = text || "";
+        text.textContent = text || "";
     }
 }
 
@@ -464,6 +464,21 @@ async function buscarCantante(){
 
 
 
+async function exportarAPDF(seccionId) {
+    const elemento = document.getElementById(seccionId);
+    
+    const opt = {
+        margin:       0.5,
+        filename:     `BeatAndBit_Reporte_${seccionId}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: "#0b0c10" }, 
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+    };
+
+    await html2pdf().set(opt).from(elemento).save();
+}
+
+
 window.onload = () => {
     mostrarSeccion("inicio");
     cargarTopGlobal();
@@ -510,7 +525,48 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnGenerarGrafica) {
         btnGenerarGrafica.addEventListener("click", cargarHistorico);
     }
+
+    const btnExportar = document.getElementById("btnExportar");
+    const modalExportar = document.getElementById("modalExportar");
+    const btnCancelarExportar = document.getElementById("btnCancelarExportar");
+    const btnConfirmarExportar = document.getElementById("btnConfirmarExportar");
+
+    if (btnExportar) {
+        btnExportar.addEventListener("click", () => {
+            modalExportar.style.display = "flex";
+        });
+    }
+
+    if (btnCancelarExportar) {
+        btnCancelarExportar.addEventListener("click", () => {
+            modalExportar.style.display = "none";
+        });
+    }
+
+    if (btnConfirmarExportar) {
+        btnConfirmarExportar.addEventListener("click", async () => {
+            modalExportar.style.display = "none";
+
+            try {
+                const secciones = ["inicio", "paises", "artistas", "historico"];
+                let seccionVisibleId = null;
+                for (let sec of secciones) {
+                    const el = document.getElementById(sec);
+                    if (el && el.style.display !== "none") {
+                        seccionVisibleId = sec;
+                        break;
+                    }
+                }
+
+                if (!seccionVisibleId) {
+                    throw new Error("No se detectó información visible.");
+                }
+
+                await exportarAPDF(seccionVisibleId);
+            } catch (error) {
+                alert("Error al procesar el archivo");
+            }
+        });
+    }
 });
-
-
 
