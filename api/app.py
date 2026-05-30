@@ -8,13 +8,115 @@ from servicios.servicios_lastfm import obtener_artista_info
 from servicios.servicios_youtube import buscar_metricas_youtube
 from servicios.calculos import calcular_popularidad
 from servicios.transformaciones import crear_esquema_data_warehouse
+from apscheduler.schedulers.background import BackgroundScheduler
 from db.conexion import conexion
+
+
+
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     yield
+
+
+def actualizar_metricas_artistas_guardados():
+
+    print("Scheduler ejecutándose...")
+
+    from servicios.sincronizacion import obtener_artistas_guardados, guardar_datos_artista
+
+
+    artistas = obtener_artistas_guardados()
+
+    print("Artistas encontrados:", artistas)
+
+    for artista_bd in artistas:
+        nombre = artista_bd["nombre"]
+
+        print(f"Actualizando métricas de {nombre}")
+
+        spotify = busquedaArtista(nombre)
+
+        if not spotify:
+            continue
+
+        try:
+            lastfm = obtener_artista_info(nombre)
+        except Exception:
+            lastfm = {
+                "escuchas": 0,
+                "reproducciones": 0,
+                "tags": []
+            }
+
+        try:
+            youtube = buscar_metricas_youtube(nombre)
+        except Exception:
+            youtube = {
+                "vistas": 0,
+                "likes": 0,
+                "regiones": []
+            }
+
+        escuchas = lastfm.get("escuchas", 0)
+        reproducciones = lastfm.get("reproducciones", 0)
+        vistas = youtube.get("vistas", 0)
+        likes = youtube.get("likes", 0)
+
+        popularidad = calcular_popularidad(
+            escuchas,
+            reproducciones,
+            vistas,
+            likes
+        )
+
+        artista_response = {
+            "spotify_id": spotify.get("id"),
+            "nombre": spotify.get("nombre"),
+            "imagen": spotify.get("imagen"),
+            "generos": spotify.get("generos", [])
+        }
+
+        metricas_response = {
+            "escuchas": escuchas,
+            "reproducciones": reproducciones,
+            "vistas": vistas,
+            "likes": likes,
+            "popularidad": popularidad
+        }
+
+        regiones_response = youtube.get("regiones", [])
+
+        guardar_datos_artista(
+            artista_response,
+            metricas_response,
+            regiones_response
+        )
+
+
 
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print("INICIANDO SCHEDULER...")
+    scheduler = BackgroundScheduler()
+
+    scheduler.add_job(
+        actualizar_metricas_artistas_guardados,
+        "cron",
+        hour=5,
+        minute=59
+    )
+
+    scheduler.start()
+
+    print("SCHEDULER INICIADO")
+
     yield
+
+    scheduler.shutdown()
+
+    print("SCHEDULER DETENIDO")
 
 app = FastAPI(title="Beat & Bit API", lifespan=lifespan)
 
@@ -248,3 +350,8 @@ def regiones_artista(id_artista: int):
         "recomendacion_gira": regiones[:3],
         "regiones": regiones
     }
+
+
+
+
+

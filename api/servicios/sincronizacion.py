@@ -256,3 +256,28 @@ def obtener_metricas_anteriores_por_nombre(nombre):
         "vistas": fila[0],
         "likes": fila[1]
     }
+
+
+
+def obtener_artistas_guardados():
+    conn = conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id_artista, nombre
+        FROM dim_artista;
+    """)
+
+    artistas = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return [
+        {
+            "id_artista": fila[0],
+            "nombre": fila[1]
+        }
+        for fila in artistas
+    ]
+
