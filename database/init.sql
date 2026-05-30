@@ -21,6 +21,12 @@ CREATE TABLE IF NOT EXISTS dim_tiempo (
     nombre_mes VARCHAR(20) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS dim_cancion (
+    id_cancion SERIAL PRIMARY KEY,
+    titulo VARCHAR(255) UNIQUE NOT NULL,
+    id_artista INT REFERENCES dim_artista(id_artista)
+);
+
 CREATE TABLE IF NOT EXISTS fact_metricas (
     id_metrica SERIAL PRIMARY KEY,
     id_artista INT NOT NULL,
@@ -58,6 +64,17 @@ CREATE TABLE IF NOT EXISTS eventos_streaming (
     fuente VARCHAR(50),
     payload JSONB,
     fecha_evento TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS hechos_consumo (
+    id_hecho SERIAL PRIMARY KEY,
+    id_cancion INT REFERENCES dim_cancion(id_cancion),
+    id_artista INT REFERENCES dim_artista(id_artista),
+    id_tiempo INT REFERENCES dim_tiempo(id_tiempo),
+    id_region INT REFERENCES dim_region(id_region),
+    vistas BIGINT DEFAULT 0,
+    likes BIGINT DEFAULT 0,
+    score_popularidad FLOAT
 );
 
 INSERT INTO dim_region (codigo, nombre) VALUES
