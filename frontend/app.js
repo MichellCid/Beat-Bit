@@ -390,27 +390,26 @@ function renderizarGraficaHistorico(datos) {
 //-----------------------------------------------------------------------------------------------------------------------------
 // funciones para la pantalla de artistas
 
-async function infoCantante(artista, topAlbum=null){
+async function infoCantante(artista){
+
     document.getElementById("nombrePerfilArtista").textContent = artista.nombre;
     document.getElementById("imagenPerfilArtista").src = artista.imagen || "https://via.placeholder.com/180?text=Sin+Imagen";
     document.getElementById("imagenPerfilArtista").alt = artista.nombre || "Sin Imagen";
-    
     document.getElementById("seguidoresArtista").textContent = Number(artista.seguidores ?? 0).toLocaleString();
     document.getElementById("popularidadArtista").textContent = artista.popularidad ?? "0";
-    
     document.getElementById("generosArtista").textContent = (artista.generos && artista.generos.length > 0) ? artista.generos.join(", ") : "No especificados";
-        
-    document.getElementById("mejorAlbumArtista").textContent = artista.mejor_album;
+    document.getElementById("mejorCancionArtista").textContent = artista.mejor_cancion || "No disponible";
+    document.getElementById("mejorAlbumArtista").textContent = artista.mejor_album || "No disponible";
+
     const imgAlbum = document.getElementById("imagenMejorAlbum");
     if (imgAlbum) {
-        imgAlbum.src = artista.imagen_album || "https://via.placeholder.com/180?text=Sin+Imagen";
-        imgAlbum.alt = artista.mejor_album;
+        imgAlbum.src =
+            artista.imagen_album ||
+            "https://via.placeholder.com/180?text=Sin+Imagen";
+        imgAlbum.alt =
+            artista.mejor_album || "Sin álbum";
     }
 
-    const elementoCancion = document.getElementById("mejorCancionArtista");
-    if (elementoCancion) {
-        elementoCancion.textContent = artista.mejor_cancion;
-    }
 
     /** if (topAlbum) {
         document.getElementById("mejorAlbumArtista").textContent = topAlbum.nombre || "No disponible";
@@ -452,6 +451,11 @@ async function buscarCantante(){
             return;
         }
 
+        /** mostrarCancionMasFamosa(data.cancion_mas_famosa);
+        mostrarAlbumMasFamoso(data.album_mas_famoso);
+        mostrarTopCanciones(data.top_10_canciones);
+        */
+
         console.log("DATA COMPLETA:", data);
         console.log("ARTISTA:", data.artista);
         console.log("SEGUIDORES:", data.metricas?.escuchas);
@@ -471,16 +475,16 @@ async function buscarCantante(){
             generos: data.artista.generos,
             seguidores: data.metricas?.escuchas ?? 0,
             popularidad: data.metricas?.popularidad ?? 0,
-            mejor_cancion: data.metricas?.cancion_mas_popular ?? "No disponible",
-            mejor_album: data.metricas?.album_mas_popular ?? "No disponible",
-            imagen_album: data.metricas?.imagen_album_popular ?? ""
+            mejor_cancion: data.cancion_mas_famosa?.nombre ?? "No disponible",
+            mejor_album: data.album_mas_famoso?.nombre ?? "No disponible",
+            imagen_album: data.album_mas_famoso?.imagen ?? ""
         });
 
         const tbodyCanciones = document.querySelector("#topCancionesArtista tbody");
 
-        if (tbodyCanciones && data.top_canciones) {
+        if (tbodyCanciones && data.top_10_canciones) {
             tbodyCanciones.innerHTML = "";
-            data.top_canciones.forEach((track, index) => {
+            data.top_10_canciones.forEach((track, index) => {
                 tbodyCanciones.innerHTML += `
                     <tr>
                         <td>${index + 1}</td>
