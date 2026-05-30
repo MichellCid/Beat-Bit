@@ -41,8 +41,8 @@ def procesar_evento(evento):
 
         # 2. Dimensión Canción
         if id_artista:
-            cursor.execute("INSERT INTO dim_cancion (titulo, id_artista) VALUES (%s, %s) ON CONFLICT (titulo) DO NOTHING", (cancion, id_artista))
-        cursor.execute("SELECT id_cancion FROM dim_cancion WHERE titulo = %s", (cancion,))
+            cursor.execute("INSERT INTO dim_cancion (nombre_cancion, id_artista) VALUES (%s, %s) ON CONFLICT (nombre_cancion) DO NOTHING", (cancion, id_artista))
+        cursor.execute("SELECT id_cancion FROM dim_cancion WHERE nombre_cancion = %s", (cancion,))
         id_cancion_res = cursor.fetchone()
         id_cancion = id_cancion_res[0] if id_cancion_res else None
         
@@ -69,6 +69,7 @@ def procesar_evento(evento):
                 INSERT INTO hechos_consumo (id_cancion, id_artista, id_tiempo, id_region, vistas, likes, score_popularidad)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (id_cancion, id_artista, id_tiempo, id_region, vistas, likes, score))
+
         
         conexion.commit()
         cursor.close()
