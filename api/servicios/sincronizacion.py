@@ -8,13 +8,8 @@ from database import obtener_conexion_bd
 logger = logging.getLogger(__name__)
 
 def extraer_datos_youtube():
-    """
-    Extracción de datos desde YouTube Data API.
-    """
     api_key = os.getenv("YOUTUBE_API_KEY")
-    
     if not api_key:
-        print("Aviso: YOUTUBE_API_KEY no encontrada. Usando datos de prueba.")
         return [
             {"id_plataforma": "YT_001", "cancion": "Blinding Lights", "vistas": 5000000, "likes": 80000},
             {"id_plataforma": "YT_001", "cancion": "Blinding Lights", "vistas": 5000000, "likes": 80000}, 
@@ -29,11 +24,9 @@ def extraer_datos_youtube():
         "key": api_key,
         "maxResults": 15
     }
-    
     response = requests.get(url, params=params)
-    
     if response.status_code in [401, 403]:
-        raise Exception(f"Token expirado o rechazado por la API. Código HTTP: {response.status_code}")
+        raise Exception(f"Token expirado o rechazado. HTTP: {response.status_code}")
         
     response.raise_for_status()
     data = response.json()
@@ -46,9 +39,7 @@ def extraer_datos_youtube():
             "vistas": int(item["statistics"].get("viewCount", 0)),
             "likes": int(item["statistics"].get("likeCount", 0))
         })
-        
     return resultados
-
 
 def sincronizar_datos():
     conexion = obtener_conexion_bd()
@@ -62,7 +53,6 @@ def sincronizar_datos():
         datos_yt = extraer_datos_youtube()
         datos_crudos.extend(datos_yt)
     except Exception as e:
-        logger.error(f"Error en extracción API: {e}")
         exito_parcial = True 
 
     datos_limpios = {}
@@ -72,7 +62,6 @@ def sincronizar_datos():
 
     try:
         cursor = conexion.cursor()
-        
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS streaming_consumo (
                 id_plataforma VARCHAR(50) PRIMARY KEY,
@@ -81,7 +70,6 @@ def sincronizar_datos():
                 likes BIGINT
             )
         """)
-        
         for dato in datos_limpios.values():
             cursor.execute("""
                 INSERT INTO streaming_consumo (id_plataforma, cancion, vistas, likes)
@@ -93,7 +81,6 @@ def sincronizar_datos():
         conexion.commit()
         cursor.close()
     except Exception as e:
-        logger.error(f"Error al guardar en BD: {e}")
         conexion.rollback()
         return {"status": "error", "mensaje": "Error de base de datos"}
     finally:
@@ -101,21 +88,13 @@ def sincronizar_datos():
 
     if exito_parcial:
         return {"status": "warning", "mensaje": "Error: Sincronización parcial"}
-    
     return {"status": "success", "mensaje": "Sincronización exitosa"}
-
-
-
-
 
 def guardar_datos_artista(artista, metricas, regiones):
     conn = conexion()
     cursor = conn.cursor()
-
     try:
         hoy = date.today()
-
-        # 1. Insertar o actualizar artista
         cursor.execute("""
             INSERT INTO dim_artista (nombre, imagen, generos, spotify_id)
             VALUES (%s, %s, %s, %s)
@@ -131,10 +110,8 @@ def guardar_datos_artista(artista, metricas, regiones):
             ", ".join(artista["generos"]) if artista["generos"] else "",
             artista["spotify_id"]
         ))
-
         id_artista = cursor.fetchone()[0]
 
-        # 2. Insertar fecha
         cursor.execute("""
             INSERT INTO dim_tiempo (fecha, anio, mes, dia, nombre_mes)
             VALUES (%s, %s, %s, %s, %s)
@@ -148,10 +125,8 @@ def guardar_datos_artista(artista, metricas, regiones):
             hoy.day,
             hoy.strftime("%B")
         ))
-
         id_tiempo = cursor.fetchone()[0]
 
-        # 3. Insertar métricas generales
         cursor.execute("""
             INSERT INTO fact_metricas (
                 id_artista, id_tiempo, escuchas, reproducciones,
@@ -176,19 +151,13 @@ def guardar_datos_artista(artista, metricas, regiones):
             metricas["popularidad"]
         ))
 
-        # 4. Insertar métricas por región
         for region in regiones:
-            cursor.execute("""
-                SELECT id_region FROM dim_region WHERE codigo = %s;
-            """, (region["codigo"],))
-
+            cursor.execute("SELECT id_region FROM dim_region WHERE codigo = %s;", (region["codigo"],))
             resultado = cursor.fetchone()
-
             if not resultado:
                 continue
 
             id_region = resultado[0]
-
             cursor.execute("""
                 INSERT INTO fact_popularidad_region (
                     id_artista, id_region, id_tiempo,
@@ -211,26 +180,18 @@ def guardar_datos_artista(artista, metricas, regiones):
             ))
 
         conn.commit()
-        
-
         return id_artista
 
-    except Exception as e:
+    except Exception:
         conn.rollback()
-        print("ERROR guardando artista:", e)
         return None
-
     finally:
         cursor.close()
         conn.close()
 
-
-
-
 def obtener_metricas_anteriores_por_nombre(nombre):
     conn = conexion()
     cursor = conn.cursor()
-
     cursor.execute("""
         SELECT fm.vistas, fm.likes
         FROM fact_metricas fm
@@ -240,44 +201,68 @@ def obtener_metricas_anteriores_por_nombre(nombre):
         ORDER BY fm.fecha_registro DESC
         LIMIT 1;
     """, (nombre,))
-
     fila = cursor.fetchone()
-
     cursor.close()
     conn.close()
 
     if not fila:
-        return {
-            "vistas": 0,
-            "likes": 0
-        }
-
-    return {
-        "vistas": fila[0],
-        "likes": fila[1]
-    }
-
-
+        return {"vistas": 0, "likes": 0}
+    return {"vistas": fila[0], "likes": fila[1]}
 
 def obtener_artistas_guardados():
     conn = conexion()
     cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT id_artista, nombre
-        FROM dim_artista;
-    """)
-
+    cursor.execute("SELECT id_artista, nombre FROM dim_artista;")
     artistas = cursor.fetchall()
-
     cursor.close()
     conn.close()
+    return [{"id_artista": fila[0], "nombre": fila[1]} for fila in artistas]
 
-    return [
-        {
-            "id_artista": fila[0],
-            "nombre": fila[1]
+def obtener_datos_artista_hoy(nombre):
+    conn = conexion()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id_artista, nombre, imagen, generos, spotify_id FROM dim_artista WHERE nombre ILIKE %s", (nombre,))
+        artista_row = cursor.fetchone()
+        if not artista_row:
+            return None
+        
+        id_artista = artista_row[0]
+        
+        cursor.execute("SELECT escuchas, reproducciones, vistas, likes, popularidad FROM fact_metricas WHERE id_artista = %s AND id_tiempo = (SELECT id_tiempo FROM dim_tiempo WHERE fecha = CURRENT_DATE)", (id_artista,))
+        metricas_row = cursor.fetchone()
+        if not metricas_row:
+            return None
+        
+        cursor.execute("SELECT dr.codigo, fpr.vistas, fpr.likes, fpr.popularidad_region FROM fact_popularidad_region fpr JOIN dim_region dr ON fpr.id_region = dr.id_region WHERE fpr.id_artista = %s AND fpr.id_tiempo = (SELECT id_tiempo FROM dim_tiempo WHERE fecha = CURRENT_DATE)", (id_artista,))
+        regiones_rows = cursor.fetchall()
+        
+        return {
+            "id_artista": id_artista,
+            "artista": {
+                "spotify_id": artista_row[4],
+                "nombre": artista_row[1],
+                "imagen": artista_row[2],
+                "generos": artista_row[3].split(", ") if artista_row[3] else []
+            },
+            "metricas": {
+                "escuchas": metricas_row[0],
+                "reproducciones": metricas_row[1],
+                "vistas": metricas_row[2],
+                "likes": metricas_row[3],
+                "popularidad": float(metricas_row[4])
+            },
+            "regiones": [
+                {
+                    "codigo": r[0],
+                    "vistas": r[1],
+                    "likes": r[2],
+                    "popularidad_region": float(r[3])
+                } for r in regiones_rows
+            ]
         }
-        for fila in artistas
-    ]
-
+    except Exception:
+        return None
+    finally:
+        cursor.close()
+        conn.close()
