@@ -1,6 +1,8 @@
 import os
 import requests
 import logging
+from datetime import date
+from db.conexion import conexion
 from database import obtener_conexion_bd
 
 logger = logging.getLogger(__name__)
@@ -101,3 +103,156 @@ def sincronizar_datos():
         return {"status": "warning", "mensaje": "Error: Sincronización parcial"}
     
     return {"status": "success", "mensaje": "Sincronización exitosa"}
+
+
+
+
+
+def guardar_datos_artista(artista, metricas, regiones):
+    conn = conexion()
+    cursor = conn.cursor()
+
+    try:
+        hoy = date.today()
+
+        # 1. Insertar o actualizar artista
+        cursor.execute("""
+            INSERT INTO dim_artista (nombre, imagen, generos, spotify_id)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (nombre)
+            DO UPDATE SET
+                imagen = EXCLUDED.imagen,
+                generos = EXCLUDED.generos,
+                spotify_id = EXCLUDED.spotify_id
+            RETURNING id_artista;
+        """, (
+            artista["nombre"],
+            artista["imagen"],
+            ", ".join(artista["generos"]) if artista["generos"] else "",
+            artista["spotify_id"]
+        ))
+
+        id_artista = cursor.fetchone()[0]
+
+        # 2. Insertar fecha
+        cursor.execute("""
+            INSERT INTO dim_tiempo (fecha, anio, mes, dia, nombre_mes)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (fecha)
+            DO UPDATE SET fecha = EXCLUDED.fecha
+            RETURNING id_tiempo;
+        """, (
+            hoy,
+            hoy.year,
+            hoy.month,
+            hoy.day,
+            hoy.strftime("%B")
+        ))
+
+        id_tiempo = cursor.fetchone()[0]
+
+        # 3. Insertar métricas generales
+        cursor.execute("""
+            INSERT INTO fact_metricas (
+                id_artista, id_tiempo, escuchas, reproducciones,
+                vistas, likes, popularidad
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id_artista, id_tiempo)
+            DO UPDATE SET
+                escuchas = EXCLUDED.escuchas,
+                reproducciones = EXCLUDED.reproducciones,
+                vistas = EXCLUDED.vistas,
+                likes = EXCLUDED.likes,
+                popularidad = EXCLUDED.popularidad,
+                fecha_registro = CURRENT_TIMESTAMP;
+        """, (
+            id_artista,
+            id_tiempo,
+            metricas["escuchas"],
+            metricas["reproducciones"],
+            metricas["vistas"],
+            metricas["likes"],
+            metricas["popularidad"]
+        ))
+
+        # 4. Insertar métricas por región
+        for region in regiones:
+            cursor.execute("""
+                SELECT id_region FROM dim_region WHERE codigo = %s;
+            """, (region["codigo"],))
+
+            resultado = cursor.fetchone()
+
+            if not resultado:
+                continue
+
+            id_region = resultado[0]
+
+            cursor.execute("""
+                INSERT INTO fact_popularidad_region (
+                    id_artista, id_region, id_tiempo,
+                    vistas, likes, popularidad_region
+                )
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (id_artista, id_region, id_tiempo)
+                DO UPDATE SET
+                    vistas = EXCLUDED.vistas,
+                    likes = EXCLUDED.likes,
+                    popularidad_region = EXCLUDED.popularidad_region,
+                    fecha_registro = CURRENT_TIMESTAMP;
+            """, (
+                id_artista,
+                id_region,
+                id_tiempo,
+                region["vistas"],
+                region["likes"],
+                region["popularidad_region"]
+            ))
+
+        conn.commit()
+        
+
+        return id_artista
+
+    except Exception as e:
+        conn.rollback()
+        print("ERROR guardando artista:", e)
+        return None
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+
+def obtener_metricas_anteriores_por_nombre(nombre):
+    conn = conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT fm.vistas, fm.likes
+        FROM fact_metricas fm
+        JOIN dim_artista da
+            ON fm.id_artista = da.id_artista
+        WHERE da.nombre = %s
+        ORDER BY fm.fecha_registro DESC
+        LIMIT 1;
+    """, (nombre,))
+
+    fila = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not fila:
+        return {
+            "vistas": 0,
+            "likes": 0
+        }
+
+    return {
+        "vistas": fila[0],
+        "likes": fila[1]
+    }

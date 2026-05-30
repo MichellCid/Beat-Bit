@@ -1,5 +1,7 @@
 const API_URL = "http://localhost:8000/api";
 let chartInstance = null;
+let idArtistaActual = null;
+let graficaArtista = null;
 
 function mostrarSeccion(id) {
     document.querySelectorAll("#inicio, #paises, #artistas, #historico").forEach(sec => {
@@ -446,6 +448,7 @@ async function buscarCantante(){
         console.log("GENEROS:", data.artista.generos);
 
 
+        idArtistaActual = data.id_artista;
         
 
         
@@ -466,6 +469,72 @@ async function buscarCantante(){
     }
 
 
+}
+
+
+async function cargarHistoricoArtista() {
+    if (!idArtistaActual) {
+        alert("Primero busca un artista.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:8000/artista/${idArtistaActual}/historico`);
+        const data = await response.json();
+
+        const historico = data.historico || [];
+
+        if (historico.length === 0) {
+            alert("No hay histórico para este artista.");
+            return;
+        }
+
+        const fechas = historico.map(item => item.fecha);
+        const vistas = historico.map(item => item.vistas);
+        const likes = historico.map(item => item.likes);
+        const popularidad = historico.map(item => item.popularidad);
+
+        const ctx = document.getElementById("graficaArtista").getContext("2d");
+
+        if (graficaArtista) {
+            graficaArtista.destroy();
+        }
+
+        graficaArtista = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: fechas,
+                datasets: [
+                    {
+                        label: "Vistas YouTube",
+                        data: vistas,
+                        borderWidth: 2,
+                        fill: false
+                    },
+                    {
+                        label: "Likes YouTube",
+                        data: likes,
+                        borderWidth: 2,
+                        fill: false
+                    },
+                    {
+                        label: "Popularidad calculada",
+                        data: popularidad,
+                        borderWidth: 2,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        alert("Error al cargar el histórico del artista.");
+    }
 }
 
 
@@ -576,4 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+
+
 
