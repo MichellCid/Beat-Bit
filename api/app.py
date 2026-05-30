@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.dashboard import router as dashboard_router
 from servicios.sincronizacion import sincronizar_datos,  guardar_datos_artista, obtener_metricas_anteriores_por_nombre
-from servicios.servicios_spotify import busquedaArtista, obtenerTopCancionesArtista
+from servicios.servicios_spotify import busquedaArtista, obtenerAlbumPopular, obtenerTopCancionesArtista
 from servicios.servicios_lastfm import obtener_artista_info
 from servicios.servicios_youtube import buscar_metricas_youtube
 from servicios.calculos import calcular_popularidad
@@ -196,6 +196,11 @@ def obtener_artista(nombre: str):
 
     try:
         youtube = buscar_metricas_youtube(nombre)
+        if youtube.get("vistas", 0) == 0:
+            metricas_anteriores = obtener_metricas_anteriores_por_nombre(spotify.get("nombre"))
+            youtube["vistas"] = metricas_anteriores.get("vistas", 0)
+            youtube["likes"] = metricas_anteriores.get("likes", 0)
+
     except Exception as e:
         print("ERROR YOUTUBE:", e)
 
@@ -221,6 +226,15 @@ def obtener_artista(nombre: str):
         likes
     )
 
+    top_canciones = obtenerTopCancionesArtista(spotify.get("id"))
+    album_popular = obtenerAlbumPopular(top_canciones)
+    
+    cancion_top_nombre = "No disponible"
+    if top_canciones:
+        
+        cancion_mas_popular = max(top_canciones, key=lambda c: c.get("popularidad", 0))
+        cancion_top_nombre = cancion_mas_popular.get("nombre", "No disponible")
+
     artista_response = {
         "spotify_id": spotify.get("id"),
         "nombre": spotify.get("nombre"),
@@ -233,7 +247,10 @@ def obtener_artista(nombre: str):
         "reproducciones": reproducciones,
         "vistas": vistas,
         "likes": likes,
-        "popularidad": popularidad
+        "popularidad": popularidad,
+        "cancion_mas_popular": cancion_top_nombre,
+        "album_mas_popular": album_popular.get("nombre", "No disponible"),
+        "imagen_album_popular": album_popular.get("imagen", "")
     }
 
     regiones_response = youtube.get("regiones", [])
@@ -265,7 +282,8 @@ def obtener_artista(nombre: str):
         "id_artista": id_artista,
         "artista": artista_response,
         "metricas": metricas_response,
-        "regiones": regiones_response
+        "regiones": regiones_response,
+        "top_canciones": top_canciones
     }
 
 

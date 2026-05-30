@@ -399,16 +399,27 @@ async function infoCantante(artista, topAlbum=null){
     document.getElementById("popularidadArtista").textContent = artista.popularidad ?? "0";
     
     document.getElementById("generosArtista").textContent = (artista.generos && artista.generos.length > 0) ? artista.generos.join(", ") : "No especificados";
-    
+        
+    document.getElementById("mejorAlbumArtista").textContent = artista.mejor_album;
+    const imgAlbum = document.getElementById("imagenMejorAlbum");
+    if (imgAlbum) {
+        imgAlbum.src = artista.imagen_album || "https://via.placeholder.com/180?text=Sin+Imagen";
+        imgAlbum.alt = artista.mejor_album;
+    }
 
-    if (topAlbum) {
+    const elementoCancion = document.getElementById("mejorCancionArtista");
+    if (elementoCancion) {
+        elementoCancion.textContent = artista.mejor_cancion;
+    }
+
+    /** if (topAlbum) {
         document.getElementById("mejorAlbumArtista").textContent = topAlbum.nombre || "No disponible";
         document.getElementById("imagenMejorAlbum").src = topAlbum.imagen ?? "https://via.placeholder.com/180?text=Sin+Imagen";
         document.getElementById("imagenMejorAlbum").alt = topAlbum.nombre ?? "Sin Imagen";
     } else {
         document.getElementById("mejorAlbumArtista").textContent = "Busca las canciones para cargar el álbum";
         document.getElementById("imagenMejorAlbum").src = "https://via.placeholder.com/180?text=Sin+Datos";
-    }
+    } **/
 
     
     /**document.getElementById("mejorAlbumArtista").textContent = topAlbum?.nombre || "Sin álbum disponible";
@@ -459,8 +470,28 @@ async function buscarCantante(){
             imagen: data.artista.imagen,
             generos: data.artista.generos,
             seguidores: data.metricas?.escuchas ?? 0,
-            popularidad: data.metricas?.popularidad ?? 0
+            popularidad: data.metricas?.popularidad ?? 0,
+            mejor_cancion: data.metricas?.cancion_mas_popular ?? "No disponible",
+            mejor_album: data.metricas?.album_mas_popular ?? "No disponible",
+            imagen_album: data.metricas?.imagen_album_popular ?? ""
         });
+
+        const tbodyCanciones = document.querySelector("#topCancionesArtista tbody");
+
+        if (tbodyCanciones && data.top_canciones) {
+            tbodyCanciones.innerHTML = "";
+            data.top_canciones.forEach((track, index) => {
+                tbodyCanciones.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${track.nombre}</td>
+                        <td>${track.album}</td>
+                        <td>${track.popularidad} pts (Spotify)</td>
+                    </tr>
+                `;
+            });
+        }
+
         resultado.textContent = "";
 
     }     catch (error) {
