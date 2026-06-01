@@ -6,7 +6,7 @@ let graficaArtista = null;
 let comparacionActiva = false;
 
 function mostrarSeccion(id) {
-    document.querySelectorAll("#inicio, #paises, #artistas, #historico, #demografia").forEach(sec => {
+    document.querySelectorAll("#inicio, #paises, #artistas, #historico, #demografia, #avanzado").forEach(sec => {
         sec.style.display = "none";
     });
 
@@ -171,6 +171,7 @@ async function cargarPaisesDisponibles() {
 
         const selectA = document.getElementById("selectPais");
         const selectB = document.getElementById("selectPaisB");
+        const selectAvanzado = document.getElementById("selectRegionAvanzado");
 
         if (!data.paises || data.paises.length === 0) {
             console.warn("La API no devolvió países");
@@ -192,6 +193,7 @@ async function cargarPaisesDisponibles() {
 
         llenarSelect(selectA);
         llenarSelect(selectB);
+        llenarSelect(selectAvanzado);
 
         if (selectA) {
             selectA.addEventListener("change", () => {
@@ -879,6 +881,42 @@ function invertirOrdenOyentes() {
     renderizarTablaOyentes();
 }
 
+let graficaGenerosAvanzadoChart = null;
+function renderizarGraficaGeneros(datos) {
+    const canvas = document.getElementById("graficaGenerosAvanzado");
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext("2d");
+    if (window.graficaGenerosAvanzadoChart) {
+        window.graficaGenerosAvanzadoChart.destroy();
+    }
+    
+    const labels = datos.map(d => d.genero);
+    const valores = datos.map(d => d.porcentaje);
+    const colores = datos.map(() => `hsl(${Math.random() * 360}, 70%, 50%)`);
+    
+    window.graficaGenerosAvanzadoChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: valores,
+                backgroundColor: colores,
+                borderWidth: 1,
+                borderColor: '#1e1e1e'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { color: '#ffffff' } },
+                tooltip: { callbacks: { label: function(ctx) { return ` ${ctx.label}: ${ctx.raw.toFixed(2)}%`; } } }
+            }
+        }
+    });
+}
+
 /* =========================================================
    EVENTOS INICIALES
 ========================================================= */
@@ -990,7 +1028,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             try {
-                const secciones = ["inicio", "paises", "artistas", "historico", "demografia"];
+                const secciones = ["inicio", "paises", "artistas", "historico", "demografia", "avanzado"];
                 let seccionVisibleId = null;
 
                 for (let sec of secciones) {
@@ -1024,5 +1062,78 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (colOyentes) {
         colOyentes.addEventListener("click", invertirOrdenOyentes);
+    }
+
+    const btnAnalizarAvanzado = document.getElementById("btnAnalizarAvanzado");
+    if (btnAnalizarAvanzado) {
+        btnAnalizarAvanzado.addEventListener("click", async () => {
+            const region = document.getElementById("selectRegionAvanzado").value;
+            const genero = document.getElementById("inputGeneroAvanzado").value.trim();
+            const mensaje = document.getElementById("mensajeAvanzado");
+            const contenedor = document.getElementById("contenedorGraficaAvanzado");
+            
+            if (!region) {
+                mensaje.textContent = "Por favor selecciona una región.";
+                mensaje.style.display = "block";
+                contenedor.style.display = "none";
+                return;
+            }
+            
+            mensaje.style.display = "none";
+            btnAnalizarAvanzado.textContent = "Analizando...";
+            btnAnalizarAvanzado.disabled = true;
+            
+            try {
+                let url = `${API_URL}/popularidad-genero-region?region=${encodeURIComponent(region)}`;
+                if (genero) {
+                    url += `&genero=${encodeURIComponent(genero)}`;
+                }
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error("Error en el servidor al intentar obtener la información");
+                }
+                
+                const data = await response.json();
+                
+                if (!data.generos || data.generos.length === 0) {
+                    mensaje.textContent = "Este género no tiene reproducciones significativas en la región.";
+                    mensaje.style.display = "block";
+                    contenedor.style.display = "none";
+                } else {
+                    renderizarGraficaGeneros(data.generos);
+                    contenedor.style.display = "block";
+                }
+            } catch (e) {
+                mensaje.textContent = "Error al obtener los datos.";
+                mensaje.style.display = "block";
+                contenedor.style.display = "none";
+            } finally {
+                btnAnalizarAvanzado.textContent = "Analizar";
+                btnAnalizarAvanzado.disabled = false;
+            }
+        });
+    }
+
+    const btnLimpiarAvanzado = document.getElementById("btnLimpiarAvanzado");
+    if (btnLimpiarAvanzado) {
+        btnLimpiarAvanzado.addEventListener("click", () => {
+            const selectRegion = document.getElementById("selectRegionAvanzado");
+            if (selectRegion) selectRegion.value = "";
+            
+            const inputGenero = document.getElementById("inputGeneroAvanzado");
+            if (inputGenero) inputGenero.value = "";
+            
+            const mensaje = document.getElementById("mensajeAvanzado");
+            if (mensaje) mensaje.style.display = "none";
+            
+            const contenedor = document.getElementById("contenedorGraficaAvanzado");
+            if (contenedor) contenedor.style.display = "none";
+            
+            if (window.graficaGenerosAvanzadoChart) {
+                window.graficaGenerosAvanzadoChart.destroy();
+            }
+        });
     }
 });

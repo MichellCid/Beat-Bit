@@ -46,6 +46,10 @@
             <svg class="icono" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
             Demografía
         </a>
+        <a href="#" onclick="mostrarSeccion('avanzado')">
+            <svg class="icono" viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
+            Avanzado
+        </a>
     </div>
 
     <main class="dashboard">
@@ -345,6 +349,27 @@
             </section>
         </div>
 
+        <div id="avanzado" style="display: none;">
+            <section class="card">
+                <h2>Filtrado Avanzado: Popularidad por Género en Región</h2>
+                <div class="filtro-pais" style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+                    <label for="selectRegionAvanzado">Región:</label>
+                    <select id="selectRegionAvanzado">
+                        <option value="">Selecciona una región</option>
+                    </select>
+                    
+                    <label for="inputGeneroAvanzado">Género:</label>
+                    <input type="text" id="inputGeneroAvanzado" placeholder="Ej. Pop (Opcional)">
+
+                    <button id="btnAnalizarAvanzado" class="btn-primary">Analizar</button>
+                    <button id="btnLimpiarAvanzado" class="btn-secondary">Limpiar</button>
+                </div>
+                <p id="mensajeAvanzado" class="mensaje-error" style="display: none;"></p>
+                <div id="contenedorGraficaAvanzado" style="display: none; position: relative; height: 400px; width: 100%;">
+                    <canvas id="graficaGenerosAvanzado"></canvas>
+                </div>
+            </section>
+        </div>
 
     </main>
 
