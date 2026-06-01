@@ -217,48 +217,68 @@
 
              <h2>Analisis por artistas</h2>
 
-                <section class="card">
-                    <h3>Buscar cantante</h3>
+                
+            <section class="card">
+                <h3>Buscar cantante</h3>
 
-                    <div class="buscador">  
-                        <input type="Text" id="inputArtista" list="artistasDatalist" placeholder="Ingresa el nombre del cantante">
-                        <button onClick="buscarCantante()">Buscar</button>
+                <div class="buscador">  
+                    <input type="Text" id="inputArtista" list="artistasDatalist" placeholder="Ingresa el nombre del cantante">
+                    <button onClick="buscarCantante()">Buscar</button>
+                </div>
+                <p id="resultadoBusqueda"></p>
+            </section>
+
+                <!--<section class="card perfil-cantante"> -->
+                    <div class="tarjetas-grid">
+
+                        
+                    
+                        <section class="card">
+                            <p id="nombrePerfilArtista"></p>
+                            
+                            <img id="imagenPerfilArtista" src="" alt="Imagen del artista" width="180">
+                        </section>
+
+                        <section class="card">
+                            <p> Seguidores: </p>
+                            <p id="seguidoresArtista"></p>
+
+                        </section>
+
+                        <section class="card">
+                            <p>Popularidad: </p>
+                            <p id="popularidadArtista"></p>
+
+                        </section>
+
+                        <section class="card">
+                            <p> Generos: </p>
+                            <p id="generosArtista"></p>
+                        </section>
+
+                        <section class="card"> 
+                            <p> Canción más popular: </p>
+                            <p id="mejorCancionArtista" style="font-weight: bold; color: #2ecc71;"></p>
+
+                            <p> Album mas escuchado: </p>
+                            <p id="mejorAlbumArtista"></p>
+                            <img id="imagenMejorAlbum" src="" alt="Imagen del album" width="180">
+
+                        </section>
+
+                            
                     </div>
-                    <p id="resultadoBusqueda"></p>
-                </section>
 
-                <section class="card perfil-cantante">
-                    
-                    <p id="nombrePerfilArtista"></p>
-                    
-                    <img id="imagenPerfilArtista" src="" alt="Imagen del artista" width="180">
-                    
-                    <p> Seguidores: </p>
-                    <p id="seguidoresArtista"></p>
-
-                    <p>Popularidad: </p>
-                    <p id="popularidadArtista"></p>
-
-                    <p> Generos: </p>
-                    <p id="generosArtista"></p>
-
-                    <p> Canción más popular: </p>
-                    <p id="mejorCancionArtista" style="font-weight: bold; color: #2ecc71;"></p>
-
-                    <p> Album mas escuchado: </p>
-                    <p id="mejorAlbumArtista"></p>
-                    <img id="imagenMejorAlbum" src="" alt="Imagen del album" width="180">
-
-                    <button onclick="cargarHistoricoArtista()">Ver crecimiento</button>
+                    <button class="btn-primary" onclick="cargarHistoricoArtista()">Ver crecimiento</button>
 
                     <div style="height: 350px;">
                         <canvas id="graficaArtista"></canvas>
                     </div>
 
-                </section>
+                <!--</section> -->
                 
                 <section class="top" >
-                    <h3>Top 10 canciones del artista</h3>
+                    <h3>Top 5 del artista</h3>
                     <table class="tabla" id="topCancionesArtista">
                         <thead>
                             <tr>
@@ -275,29 +295,9 @@
 
                 </section>
 
-                <section class="giras">
-                    <h3>Recomendaciones para giras</h3>
-
-                    <div id="mapaGiras"></div>
-                </section>
             
 
-            <section class="card">
-                <h2>Análisis por artistas</h2>
-                <table class="tabla" id="tablaTopArtistas">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Artista</th>
-                            <th>Reproducciones/seguidores</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-
-
-            </section>
+            
         </div>
 
         
