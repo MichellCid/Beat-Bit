@@ -2,8 +2,23 @@ CREATE TABLE IF NOT EXISTS dim_artista (
     id_artista SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL UNIQUE,
     imagen TEXT,
-    generos TEXT,
     spotify_id VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS dim_genero (
+    id_genero SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS bridge_artista_genero (
+    id_artista INT NOT NULL REFERENCES dim_artista(id_artista) ON DELETE CASCADE,
+    id_genero INT NOT NULL REFERENCES dim_genero(id_genero) ON DELETE CASCADE,
+    PRIMARY KEY (id_artista, id_genero)
+);
+
+CREATE TABLE IF NOT EXISTS dim_cancion (
+    id_cancion SERIAL PRIMARY KEY,
+    nombre_cancion VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS dim_region (
@@ -21,40 +36,20 @@ CREATE TABLE IF NOT EXISTS dim_tiempo (
     nombre_mes VARCHAR(20) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS dim_cancion (
-    id_cancion SERIAL PRIMARY KEY,
-    nombre_cancion VARCHAR(255) UNIQUE NOT NULL,
-    id_artista INT REFERENCES dim_artista(id_artista)
-);
-
-CREATE TABLE IF NOT EXISTS fact_metricas (
-    id_metrica SERIAL PRIMARY KEY,
-    id_artista INT NOT NULL,
-    id_tiempo INT NOT NULL,
+CREATE TABLE IF NOT EXISTS fact_rendimiento_streaming (
+    id_hecho SERIAL PRIMARY KEY,
+    id_artista INT NOT NULL REFERENCES dim_artista(id_artista),
+    id_tiempo INT NOT NULL REFERENCES dim_tiempo(id_tiempo),
+    id_region INT NOT NULL REFERENCES dim_region(id_region),
+    id_cancion INT REFERENCES dim_cancion(id_cancion),
     escuchas BIGINT DEFAULT 0,
     reproducciones BIGINT DEFAULT 0,
     vistas BIGINT DEFAULT 0,
     likes BIGINT DEFAULT 0,
-    popularidad NUMERIC(5,2) DEFAULT 0,
+    score_popularidad NUMERIC(12,2) DEFAULT 0,
+    tipo_ingesta VARCHAR(50),
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_metricas_artista FOREIGN KEY (id_artista) REFERENCES dim_artista(id_artista),
-    CONSTRAINT fk_metricas_tiempo FOREIGN KEY (id_tiempo) REFERENCES dim_tiempo(id_tiempo),
-    CONSTRAINT unique_artista_tiempo UNIQUE (id_artista, id_tiempo)
-);
-
-CREATE TABLE IF NOT EXISTS fact_popularidad_region (
-    id_popularidad_region SERIAL PRIMARY KEY,
-    id_artista INT NOT NULL,
-    id_region INT NOT NULL,
-    id_tiempo INT NOT NULL,
-    vistas BIGINT DEFAULT 0,
-    likes BIGINT DEFAULT 0,
-    popularidad_region NUMERIC(12,2) DEFAULT 0,
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pop_artista FOREIGN KEY (id_artista) REFERENCES dim_artista(id_artista),
-    CONSTRAINT fk_pop_region FOREIGN KEY (id_region) REFERENCES dim_region(id_region),
-    CONSTRAINT fk_pop_tiempo FOREIGN KEY (id_tiempo) REFERENCES dim_tiempo(id_tiempo),
-    CONSTRAINT unique_artista_region UNIQUE (id_artista, id_region, id_tiempo)
+    CONSTRAINT unique_evento_rendimiento UNIQUE (id_artista, id_tiempo, id_region, id_cancion, tipo_ingesta)
 );
 
 CREATE TABLE IF NOT EXISTS eventos_streaming (
@@ -66,18 +61,8 @@ CREATE TABLE IF NOT EXISTS eventos_streaming (
     fecha_evento TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS hechos_consumo (
-    id_hecho SERIAL PRIMARY KEY,
-    id_cancion INT REFERENCES dim_cancion(id_cancion),
-    id_artista INT REFERENCES dim_artista(id_artista),
-    id_tiempo INT REFERENCES dim_tiempo(id_tiempo),
-    id_region INT REFERENCES dim_region(id_region),
-    vistas BIGINT DEFAULT 0,
-    likes BIGINT DEFAULT 0,
-    score_popularidad FLOAT
-);
-
 INSERT INTO dim_region (codigo, nombre) VALUES
+('GL', 'Global'),
 ('AG', 'Antigua y Barbuda'),
 ('AR', 'Argentina'),
 ('BS', 'Bahamas'),
@@ -113,4 +98,5 @@ INSERT INTO dim_region (codigo, nombre) VALUES
 ('SR', 'Surinam'),
 ('TT', 'Trinidad y Tobago'),
 ('UY', 'Uruguay'),
-('VE', 'Venezuela');
+('VE', 'Venezuela')
+ON CONFLICT (codigo) DO NOTHING;

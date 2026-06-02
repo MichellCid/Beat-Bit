@@ -83,7 +83,10 @@ def home():
 def endpoint_sincronizar():
     resultado_extraccion = sincronizar_datos()
     resultado_transformacion = crear_esquema_data_warehouse()
+    
     return {
+        "status": resultado_extraccion.get("status", "error"),
+        "mensaje": resultado_extraccion.get("mensaje", "Sincronización terminada"),
         "extraccion": resultado_extraccion,
         "transformacion": resultado_transformacion
     }
@@ -100,10 +103,6 @@ def test_db():
 
 @app.get("/artista/{nombre}")
 def obtener_artista(nombre: str):
-    # datos_cacheados = obtener_datos_artista_hoy(nombre)
-    # if datos_cacheados:
-    #     return datos_cacheados
-
     spotify = busquedaArtista(nombre)
     
     if not spotify:
@@ -130,9 +129,6 @@ def obtener_artista(nombre: str):
 
     popularidad = calcular_popularidad(escuchas, reproducciones, vistas, likes)
 
-    #top_canciones = obtenerTopCancionesArtista(spotify.get("id"))
-    #album_popular = obtenerAlbumPopular(top_canciones)
-    
     artista_response = {
         "spotify_id": spotify.get("id"),
         "nombre": spotify.get("nombre"),
@@ -146,7 +142,6 @@ def obtener_artista(nombre: str):
         "vistas": vistas,
         "likes": likes,
         "popularidad": popularidad,
-        
     }
 
     regiones_response = youtube.get("regiones", [])
@@ -158,7 +153,6 @@ def obtener_artista(nombre: str):
         "artista": artista_response,
         "metricas": metricas_response,
         "cancion_mas_famosa": cancion_mas_famosa,
-        #"top_canciones": top_canciones,
         "album_mas_famoso": album_mas_famoso,
         "top_10_canciones": top_canciones,
         "regiones": regiones_response
@@ -169,10 +163,11 @@ def historico_artista(id_artista: int):
     conn = conexion()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT dt.fecha, fm.escuchas, fm.reproducciones, fm.vistas, fm.likes, fm.popularidad
-        FROM fact_metricas fm
-        JOIN dim_tiempo dt ON fm.id_tiempo = dt.id_tiempo
-        WHERE fm.id_artista = %s
+        SELECT dt.fecha, f.escuchas, f.reproducciones, f.vistas, f.likes, f.score_popularidad
+        FROM fact_rendimiento_streaming f
+        JOIN dim_tiempo dt ON f.id_tiempo = dt.id_tiempo
+        JOIN dim_region dr ON f.id_region = dr.id_region
+        WHERE f.id_artista = %s AND dr.codigo = 'GL' AND f.tipo_ingesta = 'BATCH_API'
         ORDER BY dt.fecha;
     """, (id_artista,))
     filas = cursor.fetchall()
@@ -196,11 +191,11 @@ def regiones_artista(id_artista: int):
     conn = conexion()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT dr.codigo, dr.nombre, fpr.vistas, fpr.likes, fpr.popularidad_region
-        FROM fact_popularidad_region fpr
-        JOIN dim_region dr ON fpr.id_region = dr.id_region
-        WHERE fpr.id_artista = %s
-        ORDER BY fpr.popularidad_region DESC;
+        SELECT dr.codigo, dr.nombre, f.vistas, f.likes, f.score_popularidad
+        FROM fact_rendimiento_streaming f
+        JOIN dim_region dr ON f.id_region = dr.id_region
+        WHERE f.id_artista = %s AND dr.codigo != 'GL' AND f.tipo_ingesta = 'BATCH_API'
+        ORDER BY f.score_popularidad DESC;
     """, (id_artista,))
     filas = cursor.fetchall()
     cursor.close()
