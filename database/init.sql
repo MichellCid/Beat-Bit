@@ -100,3 +100,20 @@ INSERT INTO dim_region (codigo, nombre) VALUES
 ('UY', 'Uruguay'),
 ('VE', 'Venezuela')
 ON CONFLICT (codigo) DO NOTHING;
+
+
+alter table dim_cancion add column if not exists anio_lanzamiento int;
+
+create table if not exists fact_popularidad_cancion(
+    id_cancion int not null,
+    id_tiempo int not null,
+    id_artista int not null,
+    reproducciones bigint default 0,
+    popularidad numeric(12,2) default 0,
+    fecha_registro timestamp default current_timestamp,
+    primary key (id_cancion, id_tiempo, id_artista),
+    constraint fk_cancion foreign key (id_cancion) references dim_cancion(id_cancion),
+    constraint fk_tiempo foreign key (id_tiempo) references dim_tiempo(id_tiempo),
+    constraint fk_artista foreign key (id_artista) references dim_artista(id_artista)
+
+)

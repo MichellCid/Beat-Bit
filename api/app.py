@@ -7,7 +7,7 @@ from servicios.servicios_spotify import busquedaArtista, obtenerTopCancionesArti
 from servicios.servicios_lastfm import obtener_artista_info
 from servicios.servicios_youtube import buscar_metricas_youtube
 from servicios.calculos import calcular_popularidad
-from servicios.transformaciones import crear_esquema_data_warehouse
+from servicios.transformaciones import crear_esquema_data_warehouse, pipeline_etl_popularidad, consultar_top_artistas_por_anio
 from apscheduler.schedulers.background import BackgroundScheduler
 from db.conexion import conexion
 
@@ -214,3 +214,27 @@ def regiones_artista(id_artista: int):
         "recomendacion_gira": regiones[:3],
         "regiones": regiones
     }
+
+
+
+
+
+
+@app.post("/api/popularidad_cancion")
+def popularidad_cancion():
+    return pipeline_etl_popularidad()
+
+
+
+@app.get("/api/historico/top-artistas")
+def historico_top_artistas(inicio: int, fin: int, limite: int = 3):
+    return {
+        "inicio": inicio,
+        "fin": fin,
+        "limite": limite,
+        "top_artistas": consultar_top_artistas_por_anio(inicio, fin, limite)
+    }
+
+
+
+

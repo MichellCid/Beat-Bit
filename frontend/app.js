@@ -566,6 +566,114 @@ function renderizarGraficaHistorico(datos) {
     });
 }
 
+
+let graficaTopPopularidadAnual = null;
+
+async function ejecutarETLPopularidadAnual() {
+    const mensaje = document.getElementById("mensajePopularidadAnual");
+
+    if (mensaje) {
+        mensaje.textContent = "Ejecutando ETL...";
+    }
+
+    try {
+        const response = await fetch("http://localhost:8000/api/popularidad_cancion", {
+            method: "POST"
+        });
+
+        const data = await response.json();
+
+        if (mensaje) {
+            mensaje.textContent = `${data.mensaje}. Registros cargados: ${data.registros_cargados}`;
+        }
+
+    } catch (error) {
+        console.error(error);
+
+        if (mensaje) {
+            mensaje.textContent = "Error al ejecutar el ETL.";
+        }
+    }
+}
+
+
+async function cargarTopPopularidadAnual() {
+    const inicio = document.getElementById("anioInicioPopularidad").value;
+    const fin = document.getElementById("anioFinPopularidad").value;
+    const mensaje = document.getElementById("mensajePopularidadAnual");
+
+    if (!inicio || !fin) {
+        if (mensaje) {
+            mensaje.textContent = "Selecciona año inicio y año fin.";
+        }
+        return;
+    }
+
+    if (Number(inicio) > Number(fin)) {
+        if (mensaje) {
+            mensaje.textContent = "El año inicio no puede ser mayor que el año fin.";
+        }
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `http://localhost:8000/api/historico/top-artistas?inicio=${inicio}&fin=${fin}&limite=3`
+        );
+
+        const data = await response.json();
+        const datos = data.top_artistas || [];
+
+        if (datos.length === 0) {
+            if (mensaje) {
+                mensaje.textContent = "No hay datos para ese intervalo. Ejecuta primero el ETL.";
+            }
+            return;
+        }
+
+        if (mensaje) {
+            mensaje.textContent = "";
+        }
+
+        const labels = datos.map(d => `${d.anio} - ${d.artista}`);
+        const valores = datos.map(d => d.reproducciones);
+
+        const canvas = document.getElementById("graficaTopPopularidadAnual");
+
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+
+        if (graficaTopPopularidadAnual) {
+            graficaTopPopularidadAnual.destroy();
+        }
+
+        graficaTopPopularidadAnual = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Reproducciones por año",
+                    data: valores,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        if (mensaje) {
+            mensaje.textContent = "Error al cargar el top de artistas.";
+        }
+    }
+}
+
 /* =========================================================
    ARTISTAS
 ========================================================= */
@@ -668,7 +776,7 @@ async function buscarCantante() {
                         <td>${index + 1}</td>
                         <td>${track.nombre}</td>
                         <td>${track.album}</td>
-                        <td>${track.popularidad} pts (Spotify)</td>
+                        <td>${Number(track.reproducciones ?? 0).toLocaleString()}</td>
                     </tr>
                 `;
             });
@@ -934,6 +1042,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSincronizar = document.getElementById("btnSincronizar");
     const btnGenerarGrafica = document.getElementById("btnGenerarGrafica");
     const btnComparar = document.getElementById("btnComparar");
+    const btnEjecutarETLPopularidad = document.getElementById("btnEjecutarETLPopularidad");
+    const btnVerTopPopularidad = document.getElementById("btnVerTopPopularidad");
 
     if (btnComparar) {
         btnComparar.addEventListener("click", () => {
@@ -1135,5 +1245,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.graficaGenerosAvanzadoChart.destroy();
             }
         });
+    }
+
+
+    
+    if (btnEjecutarETLPopularidad) {
+        btnEjecutarETLPopularidad.addEventListener("click", ejecutarETLPopularidadAnual);
+    }
+
+    
+    if (btnVerTopPopularidad) {
+        btnVerTopPopularidad.addEventListener("click", cargarTopPopularidadAnual);
     }
 });
